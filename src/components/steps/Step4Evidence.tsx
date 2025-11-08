@@ -1,9 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { type IncidentData, type IncidentDataUpdater, type EvidenceFile, EVIDENCE_CATEGORIES } from '../../../types';
+import React from 'react';
+import { type IncidentData, type IncidentDataUpdater, EVIDENCE_CATEGORIES } from '../../../types';
 import { JURISDICTIONS } from '../../constants';
-import { analyzeEvidence } from '../../services/geminiService';
-import { saveEvidenceData, deleteEvidenceData } from '../../services/evidenceStore';
 import H2 from '../ui/H2';
+import { useEvidenceManager } from '../../hooks/useEvidenceManager';
 
 interface Step4Props {
   data: Pick<IncidentData, 'jurisdiction' | 'evidence' | 'narrative' | 'caseNumber'>;
@@ -11,150 +10,17 @@ interface Step4Props {
   errors: { jurisdiction?: string };
 }
 
-type EditableEvidenceField = 'category' | 'description';
-
-const generateEvidenceId = () =>
-  (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `evidence-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-
 const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
-  const [isAnalyzing, setIsAnalyzing] = useState<Record<string, boolean>>({});
-
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.files) return;
-
-      const filesToProcess = Array.from(event.target.files);
-      // Reset input value so the same file can be uploaded again if needed.
-      event.target.value = '';
-
-      const fileReadPromises = filesToProcess.map(
-        file =>
-          new Promise<{ file: File; base64: string }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () =>
-              resolve({ file, base64: (reader.result as string).split(',')[1] });
-            reader.onerror = error => reject(error);
-            reader.readAsDataURL(file);
-          })
-      );
-
-      try {
-        const results = await Promise.all(fileReadPromises);
-
-        const preparedEvidence: EvidenceFile[] = await Promise.all(
-          results.map(async ({ file, base64 }) => {
-            const id = generateEvidenceId();
-            try {
-              await saveEvidenceData(id, base64);
-            } catch (error) {
-              console.warn('Failed to persist evidence in IndexedDB', error);
-            }
-
-            const supportsAnalysis =
-              file.type.startsWith('image/') ||
-              file.type.startsWith('audio/') ||
-              file.type.startsWith('video/') ||
-              file.type === 'application/pdf';
-
-            return {
-              id,
-              storageId: id,
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              category: 'Other',
-              description: '',
-              base64: supportsAnalysis ? base64 : undefined
-            };
-          })
-        );
-
-        updateData('evidence', prev =>
-          [...prev.evidence, ...preparedEvidence]
-        );
-
-        preparedEvidence.forEach(newFile => {
-          const isSupportedForAnalysis =
-            newFile.type.startsWith('image/') ||
-            newFile.type.startsWith('audio/') ||
-            newFile.type.startsWith('video/') ||
-            newFile.type === 'application/pdf';
-
-          if (!isSupportedForAnalysis) {
-            return;
-          }
-
-          setIsAnalyzing(prev => ({ ...prev, [newFile.id]: true }));
-
-          analyzeEvidence(newFile, data.narrative)
-            .then(analysis => {
-              updateData('evidence', prevIncident =>
-                prevIncident.evidence.map(item =>
-                  item.id === newFile.id
-                    ? { ...item, aiAnalysis: analysis, base64: undefined }
-                    : item
-                )
-              );
-            })
-            .catch(error => {
-              console.error('AI analysis failed:', error);
-              updateData('evidence', prevIncident =>
-                prevIncident.evidence.map(item =>
-                  item.id === newFile.id
-                    ? {
-                        ...item,
-                        aiAnalysis: 'Analysis failed due to a system error.',
-                        base64: undefined
-                      }
-                    : item
-                )
-              );
-            })
-            .finally(() => {
-              setIsAnalyzing(prev => {
-                const next = { ...prev };
-                delete next[newFile.id];
-                return next;
-              });
-            });
-        });
-      } catch (error) {
-        console.error('Failed to process uploaded files', error);
-      }
-    },
-    [data.narrative, updateData]
-  );
-
-  const updateEvidenceItem = useCallback(
-    (id: string, field: EditableEvidenceField, value: string) => {
-      updateData('evidence', prevIncident =>
-        prevIncident.evidence.map(item =>
-          item.id === id ? { ...item, [field]: value } : item
-        )
-      );
-    },
-    [updateData]
-  );
-
-  const removeEvidenceItem = useCallback(
-    async (id: string) => {
-      const target = data.evidence.find(item => item.id === id);
-      if (!target) return;
-
-      updateData('evidence', prevIncident =>
-        prevIncident.evidence.filter(item => item.id !== id)
-      );
-
-      try {
-        await deleteEvidenceData(target.storageId);
-      } catch (error) {
-        console.warn('Failed to delete evidence from IndexedDB', error);
-      }
-    },
-    [data.evidence, updateData]
-  );
+  const {
+    handleFileChange,
+    updateEvidenceItem,
+    removeEvidenceItem,
+    analysisState
+  } = useEvidenceManager({
+    narrative: data.narrative,
+    evidence: data.evidence,
+    updateData
+  });
 
   const jurisdictionError = errors.jurisdiction;
 
@@ -295,7 +161,7 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
                         className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
                       />
                     </div>
-                    {isAnalyzing[uniqueKey] && (
+                    {analysisState[uniqueKey] && (
                       <div className="text-xs text-amber-300 flex items-center pt-2">
                         <svg
                           className="animate-spin h-4 w-4 mr-2"
@@ -320,7 +186,7 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
                         AI is analyzing file...
                       </div>
                     )}
-                    {file.aiAnalysis && !isAnalyzing[uniqueKey] && (
+                    {file.aiAnalysis && !analysisState[uniqueKey] && (
                       <div className="mt-2 pt-2 border-t border-slate-600/50">
                         <p className="text-xs font-semibold text-amber-300">AI Analysis:</p>
                         <p className="text-xs text-slate-300 italic">{file.aiAnalysis}</p>
