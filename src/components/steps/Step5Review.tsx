@@ -8,7 +8,15 @@ import H1 from '../ui/H1';
 import OutlineCard from '../ui/OutlineCard';
 import StatCard from '../ui/StatCard';
 import MetadataBadge from '../ui/MetadataBadge';
-import { ResourceLinkCard, ResourceLinkList } from '../ui/ResourceLinks';
+import { ResourceLinkList } from '../ui/ResourceLinks';
+import EvidenceCard from './step5/EvidenceCard';
+import GlossaryTile, { type GlossaryEntry } from './step5/GlossaryTile';
+import ResourceLinksSection, {
+  type ResourceLinksSectionItem,
+} from './step5/ResourceLinksSection';
+import SeverityRationaleCard from './step5/SeverityRationaleCard';
+import SeveritySummaryCard from './step5/SeveritySummaryCard';
+import { getSeverityTheme } from './step5/severityThemes';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -28,32 +36,18 @@ const LOADING_MESSAGES = [
 
 const NOTES_MIN_HEIGHT = 220;
 
-const severityThemes = {
-  high: {
-    card: 'bg-[#2C0F12] border-[#FFB3B3]/60 shadow-[0_10px_25px_rgba(255,59,59,0.25)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#FFD7A3]',
-    accent: 'text-[#FFD700]',
+const GLOSSARY_ENTRIES: GlossaryEntry[] = [
+  {
+    title: 'Document Preservation',
+    description:
+      'Keep certified copies of every exhibit (screenshots, emails, call logs) with timestamps for court submission.',
   },
-  medium: {
-    card: 'bg-[#2A1A04] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(244,232,131,0.2)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#F4E883]',
-    accent: 'text-[#FFD700]',
+  {
+    title: 'Best Interests Analysis',
+    description:
+      'Courts prioritize child safety, stability, and continuity of care when reviewing co-parenting disputes.',
   },
-  low: {
-    card: 'bg-[#0a2a1f] border-[#6fe0b1]/50 shadow-[0_10px_25px_rgba(0,128,96,0.2)]',
-    label: 'text-[#F4E883]',
-    value: 'text-[#CFEFDA]',
-    accent: 'text-[#F4E883]',
-  },
-  default: {
-    card: 'bg-[#01192C] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(0,0,0,0.35)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#FFD700]',
-    accent: 'text-[#FFD700]',
-  },
-} as const;
+];
 
 type CopyState = 'idle' | 'copied' | 'error';
 
@@ -206,8 +200,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     []
   );
 
-  const severityKey = (reportData?.severity ?? '').toLowerCase() as keyof typeof severityThemes;
-  const severityStyles = severityThemes[severityKey] ?? severityThemes.default;
+  const severityTheme = useMemo(() => getSeverityTheme(reportData?.severity), [reportData?.severity]);
 
   const overviewStats = useMemo(
     () => [
@@ -355,6 +348,33 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   const summaryButtonLabel =
     copyState === 'copied' ? '✓ Copied' : copyState === 'error' ? 'Copy failed' : 'Copy summary';
 
+  const statuteItems: ResourceLinksSectionItem[] = useMemo(
+    () =>
+      statuteReferences.map(ref => ({
+        key: ref.url,
+        title: ref.label,
+        url: ref.url,
+        description:
+          ref.context ||
+          'Reference this authority when documenting how the incident aligns with statutory requirements.',
+      })),
+    [statuteReferences]
+  );
+
+  const caseLawItems: ResourceLinksSectionItem[] = useMemo(
+    () =>
+      caseLawReferences.map(ref => ({
+        key: ref.url,
+        title: ref.label || deriveReadableTitle(ref.url),
+        url: ref.url,
+        description:
+          ref.context || 'Review this case to understand how courts weigh similar fact patterns.',
+        metadata: `Jurisdiction: ${getDomainFromUrl(ref.url)}`,
+        linkLabel: 'Citation Link',
+      })),
+    [caseLawReferences]
+  );
+
   return (
     <div className="space-y-10 text-[#CFCBBF] leading-relaxed font-normal">
       <OutlineCard
@@ -379,14 +399,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {primaryStat ? <StatCard label={primaryStat.label} value={primaryStat.value} /> : null}
-        <div className={`rounded-2xl border p-4 shadow-lg ${severityStyles.card}`}>
-          <p className={`heading-gold text-xs font-normal uppercase tracking-[0.3em] ${severityStyles.label}`}>
-            Severity
-          </p>
-          <p className={`mt-2 text-2xl font-semibold ${severityStyles.value}`}>
-            {reportData.severity ?? 'N/A'}
-          </p>
-        </div>
+        <SeveritySummaryCard severity={reportData.severity} theme={severityTheme} />
         {secondaryStats.map(stat => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} />
         ))}
@@ -421,20 +434,9 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
         </OutlineCard>
 
         <div className="space-y-6">
-          <article
-            className={`rounded-3xl p-6 shadow-[0_18px_40px_rgba(0,0,0,0.45)] ${severityStyles.card}`}
-          >
-            <div className="flex items-center justify-between">
-              <H3 className={`heading-gold text-xl font-normal ${severityStyles.label}`}>Severity Rationale</H3>
-              <span className={`text-sm font-semibold ${severityStyles.value}`}>
-                {reportData.severity ?? 'N/A'}
-              </span>
-            </div>
-            <div
-              className="prose prose-invert prose-sm mt-4 max-w-none text-[#CFCBBF]"
-              dangerouslySetInnerHTML={renderHtml(severityJustificationHtml)}
-            />
-          </article>
+          <SeverityRationaleCard severity={reportData.severity} theme={severityTheme}>
+            <div dangerouslySetInnerHTML={renderHtml(severityJustificationHtml)} />
+          </SeverityRationaleCard>
 
           <OutlineCard backgroundClassName="bg-[#021223]" className="space-y-4">
             <div>
@@ -469,39 +471,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
         {evidenceCount > 0 ? (
           <div className="mt-6 space-y-4">
             {incidentData.evidence.map((evidence, index) => (
-              <article
-                key={evidence.id}
-                className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 text-sm text-[#CFCBBF] shadow-lg shadow-black/20"
-              >
-                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F4E883]/30 pb-2">
-                  <p className="font-semibold text-[#FFD700]">
-                    EVIDENCE {String(index + 1).padStart(3, '0')}: {evidence.name}
-                  </p>
-                  <span className="text-xs text-[#CFCBBF]/70">
-                    {(evidence.size / 1024).toFixed(1)} kB · {evidence.category}
-                  </span>
-                </header>
-                <dl className="mt-3 grid gap-3 text-xs text-[#CFCBBF]/80 sm:grid-cols-2">
-                  <div>
-                    <dt className="font-semibold uppercase tracking-widest text-[#F7EF8A]/80">Type</dt>
-                    <dd className="mt-1 text-[#CFCBBF]">{evidence.type || 'Not provided'}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold uppercase tracking-widest text-[#F7EF8A]/80">
-                      Description
-                    </dt>
-                    <dd className="mt-1 text-[#CFCBBF]">
-                      {evidence.description || 'Not documented'}
-                    </dd>
-                  </div>
-                </dl>
-                {evidence.aiAnalysis ? (
-                      <p className="mt-3 rounded-2xl border border-[#F4E883]/40 bg-[#071B2A] p-3 text-xs text-[#CFCBBF]">
-                        <span className="heading-gold font-normal">AI insight:</span>{' '}
-                        {evidence.aiAnalysis}
-                      </p>
-                ) : null}
-              </article>
+              <EvidenceCard key={evidence.id} evidence={evidence} index={index} />
             ))}
             <article className="rounded-2xl border border-[#F4E883]/50 bg-[#021223] p-4 text-sm text-[#CFCBBF]">
               <H3 className="heading-gold font-normal uppercase tracking-widest text-base">Reminder</H3>
@@ -535,74 +505,26 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
             />
           </section>
 
-          <section className="space-y-4">
-            <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
-              IV. Governing Statutes (The Written Law)
-            </H3>
-            {statuteReferences.length > 0 ? (
-              <div className="space-y-4 text-[#CFCBBF]">
-                {statuteReferences.map((ref, index) => (
-                  <ResourceLinkCard
-                    key={ref.url}
-                    index={index}
-                    title={ref.label}
-                    url={ref.url}
-                    description={
-                      ref.context ||
-                      'Reference this authority when documenting how the incident aligns with statutory requirements.'
-                    }
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-[#CFCBBF]/80">
-                The AI summary did not cite specific statutes for this incident.
-              </p>
-            )}
-          </section>
+          <ResourceLinksSection
+            title="IV. Governing Statutes (The Written Law)"
+            items={statuteItems}
+            emptyMessage="The AI summary did not cite specific statutes for this incident."
+          />
 
-          {caseLawReferences.length > 0 ? (
-            <section className="space-y-4">
-              <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
-                V. High-Precedent Case Law (Judicial Interpretation)
-              </H3>
-              <div className="space-y-4 text-[#CFCBBF]">
-                {caseLawReferences.map((ref, index) => (
-                  <ResourceLinkCard
-                    key={ref.url}
-                    index={index}
-                    title={ref.label || deriveReadableTitle(ref.url)}
-                    url={ref.url}
-                    metadata={`Jurisdiction: ${getDomainFromUrl(ref.url)}`}
-                    linkLabel="Citation Link"
-                    description={
-                      ref.context || 'Review this case to understand how courts weigh similar fact patterns.'
-                    }
-                  />
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <ResourceLinksSection
+            title="V. High-Precedent Case Law (Judicial Interpretation)"
+            items={caseLawItems}
+            emptyMessage="Case law references are not available for this incident."
+          />
 
           <section className="space-y-3">
             <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
               VI. Related Legal Concepts / Glossary
             </H3>
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-3 shadow-inner shadow-black/20">
-                <strong className="heading-gold block text-base font-normal">Document Preservation</strong>
-                <p className="text-sm text-[#CFCBBF]/90">
-                  Keep certified copies of every exhibit (screenshots, emails, call logs) with timestamps
-                  for court submission.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-3 shadow-inner shadow-black/20">
-                <strong className="heading-gold block text-base font-normal">Best Interests Analysis</strong>
-                <p className="text-sm text-[#CFCBBF]/90">
-                  Courts prioritize child safety, stability, and continuity of care when reviewing
-                  co-parenting disputes.
-                </p>
-              </div>
+              {GLOSSARY_ENTRIES.map(entry => (
+                <GlossaryTile key={entry.title} {...entry} />
+              ))}
             </div>
           </section>
         </OutlineCard>
