@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { type IncidentData } from '../../types';
+import { type IncidentData } from '@/types';
 
 export type ValidationErrors = Partial<Record<keyof IncidentData, string>>;
 

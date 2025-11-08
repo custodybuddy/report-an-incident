@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { beforeEach, describe, test, mock } from 'node:test';
 import React from 'react';
-import type { IncidentData, IncidentDataUpdater } from '../../types';
+import type { IncidentData, IncidentDataUpdater } from '@/types';
 import { useEvidenceManager, __resetEvidenceManagerDependencies, __setEvidenceManagerDependencies } from './useEvidenceManager';
 
 type AsyncMock = ReturnType<typeof mock.fn>;

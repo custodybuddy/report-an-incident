@@ -1,4 +1,4 @@
-import { type IncidentData, type ReportData } from '../../../types';
+import { type IncidentData, type ReportData } from '@/types';
 import { generateReportHTML } from '../../../services/reportFormatter';
 
 export type ReportHelperSuccessType = 'success' | 'info';

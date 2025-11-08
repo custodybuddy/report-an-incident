@@ -1,4 +1,4 @@
-import { type IncidentData, type ReportData } from '../../types';
+import { type IncidentData, type ReportData } from '@/types';
 
 const formatSectionContent = (text: string | undefined | null) => {
   if (!text) return '<p>N/A</p>';

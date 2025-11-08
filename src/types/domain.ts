@@ -1,7 +1,4 @@
-import type { ComponentType, SVGProps } from 'react';
-
-export const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'] as const;
-export type EvidenceCategory = typeof EVIDENCE_CATEGORIES[number];
+import type { EvidenceCategory } from '@/constants';
 
 export interface EvidenceFile {
   id: string;
@@ -43,20 +40,12 @@ export interface ReportData {
   caseNumber?: string;
 }
 
-export type StepIcon = ComponentType<SVGProps<SVGSVGElement>>;
-
-export interface Step {
-  number: number;
-  title: string;
-  icon: StepIcon;
-}
-
 export interface ModalInfo {
-    title: string;
-    message: string;
-    type: 'success' | 'error' | 'info' | 'confirm';
-    onClose: () => void;
-    onConfirm?: () => void;
-    confirmText?: string;
-    cancelText?: string;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'confirm';
+  onClose: () => void;
+  onConfirm?: () => void;
+  confirmText?: string;
+  cancelText?: string;
 }

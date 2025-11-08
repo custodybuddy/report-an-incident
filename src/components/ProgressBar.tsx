@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { type Step } from '../../types';
+import { type Step } from '@/types/ui';
 
 interface ProgressBarProps {
   steps: Step[];

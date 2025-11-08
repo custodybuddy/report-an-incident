@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { type IncidentData } from '../../types';
+import { type IncidentData } from '@/types';
 import { deleteEvidenceBatch } from '../services/evidenceStore';
 import {
   createEmptyIncident,

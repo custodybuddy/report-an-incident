@@ -1,5 +1,5 @@
 import React from 'react';
-import { type IncidentData, type IncidentDataUpdater } from '../../../types';
+import { type IncidentData, type IncidentDataUpdater } from '@/types';
 import H1 from '../ui/H1';
 
 interface Step2Props {

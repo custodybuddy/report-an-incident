@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { type IncidentData } from '../../types';
+import { type IncidentData } from '@/types';
 
 const LOCAL_STORAGE_KEY = 'coParentingReportData';
 

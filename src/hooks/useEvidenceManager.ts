@@ -1,5 +1,5 @@
 import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
-import type { EvidenceFile, IncidentDataUpdater } from '../../types';
+import type { EvidenceFile, IncidentDataUpdater } from '@/types';
 import { saveEvidenceData as defaultSaveEvidenceData, deleteEvidenceData as defaultDeleteEvidenceData } from '../services/evidenceStore';
 import { analyzeEvidence as defaultAnalyzeEvidence } from '../services/geminiService';
 
