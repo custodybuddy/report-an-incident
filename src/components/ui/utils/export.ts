@@ -1,6 +1,27 @@
-import { type ReportData, type ModalInfo, type IncidentData } from '../../../types';
+import { type ReportData, type IncidentData } from '../../../types';
 
-const generateReportHTML = (reportData: ReportData, incidentData: IncidentData): string => {
+export class ReportExportError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ReportExportError';
+    }
+}
+
+export class MissingReportDataError extends ReportExportError {
+    constructor(message = 'Report data is missing. Please generate the summary first.') {
+        super(message);
+        this.name = 'MissingReportDataError';
+    }
+}
+
+export class PrintPreparationError extends ReportExportError {
+    constructor(message: string) {
+        super(message);
+        this.name = 'PrintPreparationError';
+    }
+}
+
+export const generateReportHTML = (reportData: ReportData, incidentData: IncidentData): string => {
     const formatSectionContent = (text: string | undefined | null) => {
         if (!text) return '<p>N/A</p>';
         // First, handle markdown links and bolding
@@ -124,90 +145,100 @@ const generateReportHTML = (reportData: ReportData, incidentData: IncidentData):
     `;
 };
 
+export interface ExportReportResult {
+    htmlContent: string;
+    url: string;
+    revoke: () => void;
+}
 
 export const exportReportToHTML = (
     reportData: ReportData,
-    incidentData: IncidentData,
-    setModal: (modal: ModalInfo) => void
-) => {
+    incidentData: IncidentData
+): ExportReportResult => {
     if (!reportData.title) {
-        setModal({ title: 'Export Error', message: 'Report data is missing. Please generate the summary first.', type: 'error' });
-        return;
+        throw new MissingReportDataError();
     }
-    
-    const htmlContent = generateReportHTML(reportData, incidentData);
 
+    const htmlContent = generateReportHTML(reportData, incidentData);
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
 
-    const newWindow = window.open(url, '_blank');
-    if (newWindow) {
-        setModal({ title: 'Report Exported', message: `The report has been opened in a new tab. Use your browser's print function to save it as a PDF.`, type: 'success' });
-    } else {
-        setModal({ title: 'Export Blocked', message: 'Your browser blocked the new window. Please allow pop-ups for this site and try again.', type: 'error' });
-    }
+    const revoke = () => URL.revokeObjectURL(url);
+
+    return { htmlContent, url, revoke };
 };
+
+export interface PrintReportResult {
+    iframe: HTMLIFrameElement;
+    htmlContent: string;
+    ready: Promise<void>;
+    triggerPrint: () => void;
+    cleanup: () => void;
+}
+
+interface PrintOptions {
+    documentRef?: Document;
+}
 
 export const printReport = (
     reportData: ReportData,
     incidentData: IncidentData,
-    setModal: (modal: ModalInfo) => void
-) => {
+    options: PrintOptions = {}
+): PrintReportResult => {
+    const { documentRef = document } = options;
+
     if (!reportData.title) {
-        setModal({ title: 'Print Error', message: 'Report data is missing. Please generate the summary first.', type: 'error' });
-        return;
+        throw new MissingReportDataError();
     }
-    
+
     const htmlContent = generateReportHTML(reportData, incidentData);
 
-    const iframe = document.createElement('iframe');
+    const iframe = documentRef.createElement('iframe');
     iframe.style.position = 'absolute';
     iframe.style.width = '0';
     iframe.style.height = '0';
     iframe.style.border = '0';
     iframe.style.visibility = 'hidden';
-    document.body.appendChild(iframe);
-    
+    documentRef.body.appendChild(iframe);
+
     const doc = iframe.contentWindow?.document;
     if (!doc) {
-        setModal({ title: 'Print Error', message: 'Could not create a document for printing.', type: 'error' });
-        document.body.removeChild(iframe);
-        return;
+        documentRef.body.removeChild(iframe);
+        throw new PrintPreparationError('Could not create a document for printing.');
     }
 
     doc.open();
     doc.write(htmlContent);
     doc.close();
 
-    const handlePrint = () => {
-        try {
-            if (iframe.contentWindow) {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-                setModal({ title: 'Print Dialog Opened', message: 'Your browser\'s print dialog should be open. You can save the report as a PDF from there.', type: 'info' });
-            }
-        } catch (e) {
-            setModal({ title: 'Print Error', message: 'Could not open print dialog. Please try exporting as HTML and printing from there.', type: 'error' });
+    const ready = new Promise<void>(resolve => {
+        if (doc.readyState === 'complete') {
+            resolve();
+        } else {
+            iframe.addEventListener('load', () => resolve(), { once: true });
         }
-    };
-    
-    // Some browsers need a moment for the content to load before printing
-    if (doc.readyState === 'complete') {
-        handlePrint();
-    } else {
-        iframe.onload = handlePrint;
-    }
+    });
 
-    // Cleanup
+    const triggerPrint = () => {
+        if (!iframe.contentWindow) {
+            throw new PrintPreparationError('Could not open print dialog. Please try exporting as HTML and printing from there.');
+        }
+
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    };
+
     const cleanup = () => {
         if (iframe.parentElement) {
-            document.body.removeChild(iframe);
+            iframe.parentElement.removeChild(iframe);
         }
     };
 
-    if (iframe.contentWindow) {
-      iframe.contentWindow.onafterprint = cleanup;
-    }
-    
-    setTimeout(cleanup, 5000); // Fallback cleanup
+    return {
+        iframe,
+        htmlContent,
+        ready,
+        triggerPrint,
+        cleanup,
+    };
 };

@@ -129,15 +129,49 @@ function App() {
   }, [resetIncident]);
 
   const handleExport = () => {
-    if (reportData) {
-      markClean();
-      exportReportToHTML(reportData, incidentData, modalInfo =>
-        setModal({ ...modalInfo, onClose: () => setModal(null) })
-      );
-    } else {
+    if (!reportData) {
       setModal({
         title: 'Export Error',
         message: 'Report data is missing. Please generate the summary first.',
+        type: 'error',
+        onClose: () => setModal(null)
+      });
+      return;
+    }
+
+    try {
+      markClean();
+      const { url, revoke } = exportReportToHTML(reportData, incidentData);
+      const newWindow = window.open(url, '_blank');
+
+      if (newWindow) {
+        setModal({
+          title: 'Report Exported',
+          message: "The report has been opened in a new tab. Use your browser's print function to save it as a PDF.",
+          type: 'success',
+          onClose: () => setModal(null)
+        });
+      } else {
+        setModal({
+          title: 'Export Blocked',
+          message: 'Your browser blocked the new window. Please allow pop-ups for this site and try again.',
+          type: 'error',
+          onClose: () => setModal(null)
+        });
+      }
+
+      window.setTimeout(() => {
+        revoke();
+      }, 1000);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred while exporting the report.';
+
+      setModal({
+        title: 'Export Error',
+        message,
         type: 'error',
         onClose: () => setModal(null)
       });
@@ -145,15 +179,79 @@ function App() {
   };
 
   const handlePrint = () => {
-    if (reportData) {
-      markClean();
-      printReport(reportData, incidentData, modalInfo =>
-        setModal({ ...modalInfo, onClose: () => setModal(null) })
-      );
-    } else {
+    if (!reportData) {
       setModal({
         title: 'Print Error',
         message: 'Report data is missing. Please generate the summary first.',
+        type: 'error',
+        onClose: () => setModal(null)
+      });
+      return;
+    }
+
+    try {
+      markClean();
+      const { ready, triggerPrint, cleanup, iframe } = printReport(reportData, incidentData);
+
+      void ready.then(() => {
+        let fallbackTimeout: ReturnType<typeof window.setTimeout> | undefined;
+
+        const scheduleCleanup = () => {
+          const targetWindow = iframe.contentWindow;
+          if (targetWindow) {
+            const handleAfterPrint = () => {
+              targetWindow.removeEventListener('afterprint', handleAfterPrint);
+              if (fallbackTimeout) {
+                window.clearTimeout(fallbackTimeout);
+              }
+              cleanup();
+            };
+
+            targetWindow.addEventListener('afterprint', handleAfterPrint, { once: true });
+          }
+
+          fallbackTimeout = window.setTimeout(() => {
+            cleanup();
+          }, 5000);
+        };
+
+        try {
+          triggerPrint();
+          scheduleCleanup();
+          setModal({
+            title: 'Print Dialog Opened',
+            message: "Your browser's print dialog should be open. You can save the report as a PDF from there.",
+            type: 'info',
+            onClose: () => setModal(null)
+          });
+        } catch (error) {
+          if (fallbackTimeout) {
+            window.clearTimeout(fallbackTimeout);
+          }
+          cleanup();
+
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Could not open print dialog. Please try exporting as HTML and printing from there.';
+
+          setModal({
+            title: 'Print Error',
+            message,
+            type: 'error',
+            onClose: () => setModal(null)
+          });
+        }
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Could not prepare the report for printing.';
+
+      setModal({
+        title: 'Print Error',
+        message,
         type: 'error',
         onClose: () => setModal(null)
       });
