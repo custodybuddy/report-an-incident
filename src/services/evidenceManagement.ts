@@ -1,5 +1,5 @@
 import { saveEvidenceData, deleteEvidenceData } from './evidenceStore';
-import { analyzeEvidence } from './geminiService';
+import { analyzeEvidence } from './evidenceAnalysis';
 import type { EvidenceFile } from '@/types';
 
 export interface EvidencePersistenceService {

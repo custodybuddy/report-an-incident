@@ -1,7 +1,7 @@
 import { type EvidenceFile } from '@/types';
-import { getEvidenceData } from "../evidenceStore";
 
-import { MODEL_NAME, tryGetClient } from "./client";
+import { getEvidenceData } from "./evidenceStore";
+import { MODEL_NAME, tryGetClient } from "./geminiClient";
 
 const resolveEvidenceBase64 = async (file: EvidenceFile): Promise<string | undefined> => {
   if (file.base64) {
@@ -39,7 +39,7 @@ export const analyzeEvidence = async (
         mimeType: file.type,
         data: base64Data,
       },
-    };
+    } as const;
 
     const prompt = `As a neutral, objective legal assistant, analyze the attached image evidence in the context of the following co-parenting incident narrative:
 ---
