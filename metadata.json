@@ -1,0 +1,5 @@
+{
+  "name": "Copy of AI Co-Parenting Report Generator",
+  "description": "A multi-step form that collects incident details and uses AI to generate an objective, court-ready report for co-parenting disputes. Features professional report generation, communication drafting, and print-ready export.",
+  "requestFramePermissions": []
+}
