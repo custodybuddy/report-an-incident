@@ -46,7 +46,7 @@ const EvidenceSection: React.FC<EvidenceSectionProps> = ({ evidence }) => {
               </dl>
               {item.aiAnalysis ? (
                 <p className="mt-3 rounded-2xl border border-[#F4E883]/40 bg-[#071B2A] p-3 text-xs text-[#CFCBBF]">
-                  <span className="heading-gold font-normal">AI insight:</span> {item.aiAnalysis}
+                  <span className="heading-gold font-normal">AI Insight:</span> {item.aiAnalysis}
                 </p>
               ) : null}
             </article>

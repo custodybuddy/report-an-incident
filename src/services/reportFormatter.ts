@@ -88,7 +88,7 @@ const renderEvidenceItems = (incidentData: IncidentData): string => {
       const description = item.description ? escapeHtml(item.description) : 'Not documented';
       const type = item.type ? escapeHtml(item.type) : 'Not provided';
       const meta = escapeHtml(formatEvidenceMeta(item.size, item.category));
-      const analysis = item.aiAnalysis ? `<p class="analysis"><strong>AI insight:</strong> ${escapeHtml(item.aiAnalysis)}</p>` : '';
+      const analysis = item.aiAnalysis ? `<p class="analysis"><strong>AI Insight:</strong> ${escapeHtml(item.aiAnalysis)}</p>` : '';
 
       return `
         <article class="evidence-card">
