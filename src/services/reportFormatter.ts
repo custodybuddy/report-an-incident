@@ -1,5 +1,5 @@
 import { type IncidentData, type ReportData } from '@/types';
-import { formatMarkdown } from '../utils/formatMarkdown';
+import { formatSectionContent } from './utils/markdownParser';
 import {
   compileLegalReferences,
   deriveReadableTitle,
@@ -54,14 +54,6 @@ const escapeHtml = (value: string | null | undefined): string => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 };
-
-const formatRichContent = (content: string | null | undefined, fallback: string): string =>
-  formatMarkdown(content, {
-    paragraphClassName: 'mb-4 last:mb-0',
-    linkClassName: 'text-amber-400 hover:underline inline-flex items-center',
-    fallbackText: fallback,
-    fallbackClassName: 'muted',
-  });
 
 const renderStatCard = (label: string, value: string): string => `
   <div class="stat-card">
@@ -406,17 +398,17 @@ export const generateReportHTML = (reportData: ReportData, incidentData: Inciden
   const severityKey = (reportData.severity || '').toLowerCase();
   const severityTheme = severityThemes[severityKey] ?? severityThemes.default;
 
-  const summaryHtml = formatRichContent(
+  const summaryHtml = formatSectionContent(
     reportData.professionalSummary,
-    'Summary has not been generated yet.',
+    { fallbackText: 'Summary has not been generated yet.' },
   );
-  const severityJustificationHtml = formatRichContent(
+  const severityJustificationHtml = formatSectionContent(
     reportData.severityJustification,
-    'Severity rationale is not yet available.',
+    { fallbackText: 'Severity rationale is not yet available.' },
   );
-  const legalInsightsHtml = formatRichContent(
+  const legalInsightsHtml = formatSectionContent(
     reportData.legalInsights,
-    'No legal insights were generated.',
+    { fallbackText: 'No legal insights were generated.' },
   );
 
   const { statuteReferences, caseLawReferences, potentialSources } = compileLegalReferences({
