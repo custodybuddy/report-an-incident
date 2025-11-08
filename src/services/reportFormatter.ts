@@ -1,5 +1,5 @@
 import { type IncidentData, type ReportData } from '@/types';
-import { formatMarkdown } from '@/utils/formatMarkdown';
+import { formatMarkdown } from '../utils/formatMarkdown';
 import {
   compileLegalReferences,
   deriveReadableTitle,

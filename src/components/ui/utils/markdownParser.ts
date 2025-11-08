@@ -1,4 +1,4 @@
-import { formatMarkdown } from '@/utils/formatMarkdown';
+import { formatMarkdown } from '../../../utils/formatMarkdown';
 
 export const formatReportContent = (text: string | undefined | null): string =>
   formatMarkdown(text, {

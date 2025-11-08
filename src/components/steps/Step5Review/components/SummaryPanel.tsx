@@ -6,18 +6,7 @@ import OutlineCard from '../../../ui/OutlineCard';
 import StatCard from '../../../ui/StatCard';
 import { renderHtmlWithFallback } from '../utils/html';
 import type { CopyState } from '../hooks/useCopyToClipboard';
-
-interface StatItem {
-  label: string;
-  value: string;
-}
-
-interface SeverityStyles {
-  card: string;
-  label: string;
-  value: string;
-  accent: string;
-}
+import type { SeverityStyles, StatItem } from '../types';
 
 interface SummaryPanelProps {
   primaryStat?: StatItem;
