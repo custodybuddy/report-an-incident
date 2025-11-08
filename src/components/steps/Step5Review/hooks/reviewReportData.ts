@@ -1,6 +1,6 @@
 import type { IncidentData, ReportData } from '@/types';
 import { formatHtmlContent } from '../utils/html';
-import type { SeverityStyles, StatItem } from '../types';
+import type { SeverityStyles, StatItem } from '@/types';
 
 const severityThemes: Record<string, SeverityStyles> = {
   high: {
