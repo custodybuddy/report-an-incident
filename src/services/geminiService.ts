@@ -3,7 +3,11 @@ import { type IncidentData, type EvidenceFile } from '../../types';
 import { getEvidenceData } from './evidenceStore';
 
 const resolveApiKey = (): string | undefined => {
-  const { VITE_GEMINI_API_KEY, VITE_API_KEY } = import.meta.env;
+  const viteEnv =
+    typeof import.meta !== 'undefined' && (import.meta as any)?.env
+      ? (import.meta as any).env as Record<string, string | undefined>
+      : {};
+  const { VITE_GEMINI_API_KEY, VITE_API_KEY } = viteEnv;
   const key =
     VITE_GEMINI_API_KEY ||
     VITE_API_KEY ||
