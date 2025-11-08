@@ -1,4 +1,4 @@
-import { type EvidenceFile } from "../../../types";
+import { type EvidenceFile } from '@/types';
 import { getEvidenceData } from "../evidenceStore";
 
 import { MODEL_NAME, tryGetClient } from "./client";

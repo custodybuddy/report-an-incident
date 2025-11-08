@@ -1,6 +1,6 @@
 import { Type } from "@google/genai";
 
-import { type IncidentData } from "../../../types";
+import { type IncidentData } from '@/types';
 import { composePrompt, generateStructuredJson } from "./promptUtils";
 
 const summarySchema = {

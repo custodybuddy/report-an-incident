@@ -1,5 +1,5 @@
 import { type GenerateContentResponse } from "@google/genai";
-import { type IncidentData } from "../../../types";
+import { type IncidentData } from '@/types';
 
 import { getClient, MODEL_NAME } from "./client";
 

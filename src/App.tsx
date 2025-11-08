@@ -10,7 +10,7 @@ import Step4Evidence from './components/steps/Step4Evidence';
 import Step5Review from './components/steps/Step5Review';
 import Modal from './components/Modal';
 import Footer from './components/Footer';
-import { STEPS } from './constants';
+import { STEPS } from '@/ui/steps';
 import { useReportWorkflow } from './hooks/useReportWorkflow';
 
 function App() {

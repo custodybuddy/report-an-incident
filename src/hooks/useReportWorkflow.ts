@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { type ModalInfo, type ReportData } from '../../types';
-import { STEPS } from '../constants';
+import { type ModalInfo, type ReportData } from '@/types';
+import { STEPS } from '@/ui/steps';
 import {
   generateCategorization,
   generateLegalInsights,
