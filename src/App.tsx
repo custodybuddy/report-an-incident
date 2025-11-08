@@ -105,6 +105,10 @@ function App() {
     }
   }, [currentStep, goToStep]);
 
+  const handleStartNewReport = useCallback(() => {
+    goToStep(1);
+  }, [goToStep]);
+
   const handleCancel = useCallback(() => {
     setModal({
       title: 'Discard Changes?',
@@ -196,7 +200,7 @@ function App() {
 
   return (
     <>
-      <Header />
+      <Header onCreateNewReport={handleStartNewReport} />
       <main className="max-w-5xl mx-auto py-16 px-6 md:px-12">
         <ProgressBar steps={STEPS} currentStep={currentStep} goToStep={goToStep} />
         <div className="bg-black/50 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-700/80 p-6 md:p-10 transition-all duration-300 mt-8 flex flex-col gap-6">

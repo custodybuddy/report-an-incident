@@ -10,11 +10,34 @@
         theme: {
           extend: {
             colors: {
-              'custom-gold': '#F5C451',
-              'custom-gold-light': '#FDE1A4',
+              'cb-primary': '#FFD700',
+              'cb-primary-soft': '#E9D09B',
+              'cb-navy': '#010A1A',
+              'cb-darkBlue': '#0D1A2E',
+              'cb-section': '#0A0A0A',
+              'cb-card': 'rgba(255,255,255,0.05)',
+              'cb-text': '#E5E7EB',
+              'cb-muted': '#9CA3AF',
+              'custom-gold': '#FFD700',
+              'custom-gold-light': '#E9D09B',
+              'custom-dark-blue': '#0d1a2e',
+              'custom-navy-dark': '#010A1A',
+              'custom-card-dark': 'rgba(255,255,255,0.05)',
+              'section-dark': '#0a0a0a'
+            },
+            boxShadow: {
+              'cb-glow': '0 10px 30px rgba(255,215,0,0.30), 0 0 40px rgba(255,215,0,0.10)',
+              'cb-button': '0 10px 30px rgba(255,215,0,0.50)'
+            },
+            borderRadius: {
+              cb: '1.5rem'
+            },
+            backgroundImage: {
+              'cb-hero-radial': 'radial-gradient(circle at center top, rgba(255,215,0,0.05) 0%, rgba(1,10,26,0) 60%)'
             },
             fontFamily: {
-              inter: ['Inter', 'sans-serif'],
+              raleway: ['Raleway', 'sans-serif'],
+              prata: ['Prata', 'serif'],
             },
           },
         },
@@ -22,10 +45,51 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prata&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            color-scheme: dark;
+        }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Raleway', sans-serif;
+            color: #CFCBBF;
+            font-weight: 500;
+            background-color: #030100;
+        }
+        h1, h2, h3, h4, h5, h6, .heading-gold {
+            font-family: 'Prata', serif;
+            font-weight: 400;
+            background: linear-gradient(120deg, #AE8625 5%, #F7EF8A 45%, #D2AC47 85%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        h1 {
+            text-transform: capitalize;
+            text-align: center;
+            color: #FFD700;
+        }
+        h2,
+        h3 {
+            color: #F4E883;
+        }
+        a {
+            color: #FFD700;
+            text-decoration: underline;
+            transition: color 150ms ease;
+        }
+        a:hover,
+        a:focus-visible {
+            color: #F4E883;
+        }
+        *:focus-visible {
+            outline: 2px solid #F4E883;
+            outline-offset: 2px;
+        }
+        @media (prefers-contrast: more) {
+          body {
+            filter: contrast(1.05);
+          }
         }
         @keyframes fade-in {
             from {
@@ -48,17 +112,18 @@
     </style>
     <style type="text/tailwindcss">
       @layer base {
+        p {
+          @apply font-raleway text-base md:text-lg text-[#CFCBBF] leading-7;
+        }
         body {
-          @apply font-inter;
+          @apply font-raleway text-[#CFCBBF];
         }
         h1 {
-          @apply font-inter text-4xl md:text-5xl font-bold text-custom-gold mb-6;
+          @apply capitalize text-center;
         }
-        h2 {
-          @apply font-inter text-2xl md:text-3xl font-semibold text-custom-gold-light mb-4;
-        }
-        p {
-          @apply font-inter text-base md:text-lg text-gray-200 leading-7;
+        h2,
+        h3 {
+          color: #F4E883;
         }
       }
     </style>
@@ -80,7 +145,7 @@
 }
 </script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-[#0A0C1F] to-[#141829] font-inter text-slate-300">
+<body class="min-h-screen bg-[#030100] font-raleway text-[#CFCBBF]">
     <div id="root"></div>
 <script type="module" src="/index.tsx"></script>
 </body>

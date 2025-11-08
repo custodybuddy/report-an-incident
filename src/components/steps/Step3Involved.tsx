@@ -3,6 +3,7 @@ import { type IncidentData, type IncidentDataUpdater } from '../../../types';
 import { PREDEFINED_PARTIES, PREDEFINED_CHILDREN } from '../../constants';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import Button from '../ui/Button';
+import H1 from '../ui/H1';
 
 interface Step3Props {
   data: Pick<IncidentData, 'parties' | 'children'>;
@@ -84,7 +85,7 @@ const Step3Involved: React.FC<Step3Props> = ({ data, updateData, errors }) => {
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
         <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-amber-400 mb-2">Who was present or affected?</h2>
+            <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">Who was present or affected?</H1>
             <p className="text-slate-400 max-w-md mx-auto">Identify all parties involved and the children who were present or impacted by the event.</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">

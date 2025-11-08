@@ -1,5 +1,6 @@
 import React from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '../../../types';
+import H1 from '../ui/H1';
 
 interface Step1Props {
     data: Pick<IncidentData, 'date' | 'time'>;
@@ -20,7 +21,7 @@ const Step1DateTime: React.FC<Step1Props> = ({ data, updateData, errors }) => {
                 className="w-36 h-24 mx-auto mb-6 object-contain"
                 aria-hidden="true"
             />
-            <h2 className="text-2xl font-bold text-amber-400 mb-2">When did this incident occur?</h2>
+            <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">When did this incident occur?</H1>
             <p className="text-slate-400 max-w-md mx-auto">Please provide the date and time of the incident for accurate legal records.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">

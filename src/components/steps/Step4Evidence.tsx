@@ -3,6 +3,7 @@ import { type IncidentData, type IncidentDataUpdater, type EvidenceFile, EVIDENC
 import { JURISDICTIONS } from '../../constants';
 import { analyzeEvidence } from '../../services/geminiService';
 import { saveEvidenceData, deleteEvidenceData } from '../../services/evidenceStore';
+import H2 from '../ui/H2';
 
 interface Step4Props {
   data: Pick<IncidentData, 'jurisdiction' | 'evidence' | 'narrative' | 'caseNumber'>;
@@ -160,7 +161,7 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-amber-400 mb-2">Jurisdiction & Evidence</h2>
+        <H2 className="text-3xl font-bold text-[#FFD700] mb-2">Jurisdiction & Evidence</H2>
         <p className="text-slate-400 max-w-lg mx-auto">
           Specify the legal jurisdiction and upload any supporting evidence like screenshots,
           documents, or recordings.

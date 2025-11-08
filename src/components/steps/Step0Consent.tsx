@@ -1,6 +1,7 @@
 import React from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '../../../types';
 import CustomCheckbox from '../ui/CustomCheckbox';
+import H1 from '../ui/H1';
 
 interface Step0Props {
     data: Pick<IncidentData, 'consentAcknowledged'>;
@@ -20,7 +21,7 @@ const Step0Consent: React.FC<Step0Props> = ({ data, updateData, errors }) => {
                     className="w-36 h-24 mx-auto mb-6 object-contain"
                     aria-hidden="true"
                 />
-                <h2 className="text-2xl font-bold text-amber-400 mb-2">Before We Begin</h2>
+                <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">Before We Begin</H1>
                 <p className="text-slate-400 max-w-md mx-auto">Please review and acknowledge our terms before documenting your incident. This ensures transparency and legal compliance.</p>
             </div>
             <div className={`max-w-2xl mx-auto p-6 bg-black/20 rounded-xl border shadow-lg transition-all duration-300 ${consentError ? 'border-red-500' : 'border-slate-700'}`}>

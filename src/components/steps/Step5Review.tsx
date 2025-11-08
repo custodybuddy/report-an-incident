@@ -1,7 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type IncidentData, type ReportData, type ModalInfo } from '../../../types';
 import { formatReportContent } from '../ui/utils/markdownParser';
 import Button from '../ui/Button';
+import H2 from '../ui/H2';
+import H3 from '../ui/H3';
+import H1 from '../ui/H1';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -21,7 +24,66 @@ const LOADING_MESSAGES = [
 ];
 
 const NOTES_MIN_HEIGHT = 220;
-const CARD_CLASS = 'rounded-2xl border border-slate-800/60 bg-slate-950/70 shadow-lg';
+
+const severityThemes = {
+  high: {
+    card: 'bg-[#2C0F12] border-[#FFB3B3]/60 shadow-[0_10px_25px_rgba(255,59,59,0.25)]',
+    label: 'text-[#FFD700]',
+    value: 'text-[#FFD7A3]',
+    accent: 'text-[#FFD700]',
+  },
+  medium: {
+    card: 'bg-[#2A1A04] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(244,232,131,0.2)]',
+    label: 'text-[#FFD700]',
+    value: 'text-[#F4E883]',
+    accent: 'text-[#FFD700]',
+  },
+  low: {
+    card: 'bg-[#0a2a1f] border-[#6fe0b1]/50 shadow-[0_10px_25px_rgba(0,128,96,0.2)]',
+    label: 'text-[#F4E883]',
+    value: 'text-[#CFEFDA]',
+    accent: 'text-[#F4E883]',
+  },
+  default: {
+    card: 'bg-[#01192C] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(0,0,0,0.35)]',
+    label: 'text-[#FFD700]',
+    value: 'text-[#FFD700]',
+    accent: 'text-[#FFD700]',
+  },
+} as const;
+
+type CopyState = 'idle' | 'copied' | 'error';
+
+const OutlineCard: React.FC<{
+  children: React.ReactNode;
+  borderClassName?: string;
+  backgroundClassName?: string;
+  className?: string;
+}> = ({
+  children,
+  borderClassName = 'border-[#F4E883]',
+  backgroundClassName = 'bg-[#01192C]',
+  className = ''
+}) => (
+  <div
+    className={`rounded-3xl border ${borderClassName} ${backgroundClassName} p-6 shadow-[0_20px_45px_rgba(0,0,0,0.45)] ${className}`}
+  >
+    {children}
+  </div>
+);
+
+const StatCard: React.FC<{ label: string; value: string; accentClassName?: string }> = ({
+  label,
+  value,
+  accentClassName = 'text-[#FFD700]'
+}) => (
+  <div className="rounded-2xl border border-[#F4E883]/60 bg-[#01192C] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+    <p className={`heading-gold text-xs font-normal uppercase tracking-[0.3em] ${accentClassName}`}>
+      {label}
+    </p>
+    <p className="mt-2 text-lg text-[#CFCBBF]">{value}</p>
+  </div>
+);
 
 const LoadingSpinner: React.FC = () => {
   const [messageIndex, setMessageIndex] = useState(0);
@@ -42,7 +104,7 @@ const LoadingSpinner: React.FC = () => {
     >
       <svg
         aria-hidden="true"
-        className="h-14 w-14 animate-spin text-amber-400"
+        className="h-14 w-14 animate-spin text-[#FFD700]"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -55,124 +117,86 @@ const LoadingSpinner: React.FC = () => {
         />
       </svg>
       <div>
-        <h3 className="text-2xl font-semibold text-slate-100">Generating AI analysis…</h3>
-        <p className="mt-2 max-w-sm text-sm text-slate-400">{LOADING_MESSAGES[messageIndex]}</p>
+        <H3 className="heading-gold text-2xl font-normal">Generating AI analysis…</H3>
+        <p className="mt-2 max-w-sm text-sm text-[#CFCBBF]/80">{LOADING_MESSAGES[messageIndex]}</p>
       </div>
     </div>
   );
 };
 
-const SectionCard: React.FC<{
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  className?: string;
-}> = ({ title, description, children, className = '' }) => (
-  <section className={`${CARD_CLASS} p-6 sm:p-8 ${className}`}>
-    <header className="mb-5 space-y-2">
-      <div className="flex items-center gap-3">
-        <span className="h-6 w-1 rounded-full bg-amber-400" aria-hidden="true"></span>
-        <h3 className="text-lg font-semibold text-amber-200">{title}</h3>
-      </div>
-      {description ? <p className="text-sm text-slate-400">{description}</p> : null}
-    </header>
-    <div className="text-sm text-slate-200">{children}</div>
-  </section>
-);
+const formatHtml = (content?: string) => formatReportContent(content ?? '');
 
-const MetadataStat: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({
-  icon,
-  label,
-  value,
-}) => (
-  <div className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/60 px-4 py-3">
-    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300">
-      {icon}
-    </div>
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-amber-200/90">{label}</p>
-      <p className="text-sm font-semibold text-amber-100">{value}</p>
-    </div>
-  </div>
-);
+type LegalReference = { label: string; url: string; context?: string };
 
-const DetailSection: React.FC<{
-  title: string;
-  body: string;
-  isHtml?: boolean;
-  bodyClassName?: string;
-}> = ({ title, body, isHtml = false, bodyClassName = '' }) => (
-  <SectionCard title={title}>
-    {isHtml ? (
-      <div
-        className={`prose prose-invert prose-sm prose-headings:text-amber-200 max-w-none leading-relaxed text-slate-200 ${bodyClassName}`}
-        dangerouslySetInnerHTML={{ __html: body }}
-      />
-    ) : (
-      <p className={`whitespace-pre-wrap text-base leading-relaxed text-slate-100 ${bodyClassName}`}>
-        {body || 'N/A'}
-      </p>
-    )}
-  </SectionCard>
-);
+const isSentenceBoundary = (char: string) => /[.!?]/.test(char);
 
-const ResourceLink: React.FC<{ href: string; domain: string; index: number }> = ({
-  href,
-  domain,
-  index,
-}) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="group flex items-center gap-5 rounded-2xl border border-amber-400/20 bg-gradient-to-br from-amber-400/10 via-transparent to-transparent px-5 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-amber-300/40 hover:bg-amber-400/15"
-  >
-    <span className="flex h-8 min-w-[2.5rem] items-center justify-center rounded-full bg-slate-950/70 text-xs font-semibold uppercase tracking-widest text-amber-200/90">
-      {index + 1 < 10 ? `0${index + 1}` : index + 1}
-    </span>
-    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-400/20 text-amber-100 transition-colors group-hover:bg-amber-300/30 group-hover:text-amber-50">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M10 13a5 5 0 0 0 7.54.54l2-2a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-2 2a5 5 0 0 0 7.07 7.07l1.72-1.71" />
-      </svg>
-    </div>
-    <div className="min-w-0 flex-1">
-      <p className="truncate text-sm font-semibold text-amber-100 transition group-hover:text-amber-50">
-        {domain}
-      </p>
-      <p className="truncate text-xs text-slate-300 transition group-hover:text-amber-100/80">
-        {href}
-      </p>
-    </div>
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="flex-shrink-0 text-amber-200 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-amber-100"
-      aria-hidden="true"
-    >
-      <path d="M5 12h14" />
-      <path d="m13 5 7 7-7 7" />
-    </svg>
-  </a>
-);
+const sanitizeMarkdownText = (text: string): string =>
+  text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+    .replace(/`/g, '')
+    .trim();
+
+const extractMarkdownLinks = (markdown?: string): LegalReference[] => {
+  if (!markdown) {
+    return [];
+  }
+
+  const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const links: LegalReference[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(markdown)) !== null) {
+    const [fullMatch, label, url] = match;
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    let start = match.index;
+    while (start > 0) {
+      const prevChar = markdown[start - 1];
+      if (isSentenceBoundary(prevChar) || prevChar === '\n') break;
+      start -= 1;
+    }
+
+    let end = match.index + fullMatch.length;
+    while (end < markdown.length) {
+      const nextChar = markdown[end];
+      if (isSentenceBoundary(nextChar)) {
+        end += 1;
+        break;
+      }
+      if (nextChar === '\n') break;
+      end += 1;
+    }
+
+    const context = sanitizeMarkdownText(markdown.slice(start, end).trim());
+    links.push({ label: label.trim(), url, context });
+  }
+
+  return links;
+};
+
+const isCaseLawSource = (url: string): boolean =>
+  /(canlii|court|appeal|uscourts|supreme|tribunal|judgment|caselaw|gov\.uk\/guidance)/i.test(url);
+
+const deriveReadableTitle = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.replace(/^www\./, '');
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    if (segments.length === 0) {
+      return hostname;
+    }
+    const candidate = decodeURIComponent(segments[segments.length - 1])
+      .replace(/\.[a-z]+$/i, '')
+      .replace(/[-_]/g, ' ')
+      .trim();
+    return candidate.length > 3 ? candidate : hostname;
+  } catch {
+    return url;
+  }
+};
 
 const Step5Review: React.FC<Step5ReviewProps> = ({
   incidentData,
@@ -184,7 +208,9 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
 }) => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const [personalNotes, setPersonalNotes] = useState('');
+  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   useEffect(() => {
     if (!isGeneratingSummary && reportData && headingRef.current) {
@@ -200,70 +226,86 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     textarea.style.height = `${Math.max(textarea.scrollHeight, NOTES_MIN_HEIGHT)}px`;
   }, [personalNotes]);
 
-  const metadata = useMemo(() => {
-    if (!reportData) return [];
-    return [
-      {
-        label: 'Category',
-        value: reportData.category ?? 'N/A',
-        icon: (
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-            <line x1="7" y1="7" x2="7.01" y2="7" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Severity',
-        value: reportData.severity ?? 'N/A',
-        icon: (
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            <path d="M12 8v4" />
-            <path d="M12 16h.01" />
-          </svg>
-        ),
-      },
-      {
-        label: 'Case Number',
-        value: reportData.caseNumber ?? 'Not provided',
-        icon: (
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-        ),
-      },
-    ];
-  }, [reportData]);
+  const generatedAt = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date()),
+    []
+  );
 
-  const detailSections = useMemo(() => {
-    if (!reportData) return [];
-    return [
-      { title: 'Incident Title', body: reportData.title ?? 'N/A' },
-      {
-        title: 'Severity Justification',
-        body: formatReportContent(reportData.severityJustification ?? ''),
-        isHtml: true,
-      },
-      {
-        title: 'Professional Summary',
-        body: formatReportContent(reportData.professionalSummary ?? ''),
-        isHtml: true,
-      },
-      {
-        title: 'Legal Insights & Considerations',
-        body: formatReportContent(reportData.legalInsights ?? ''),
-        isHtml: true,
-        bodyClassName:
-          'prose-p:mb-4 prose-p:text-slate-100 prose-p:leading-relaxed prose-ul:list-disc prose-ul:ml-5 prose-li:marker:text-amber-300',
-      },
-    ];
-  }, [reportData]);
+  const severityKey = (reportData?.severity ?? '').toLowerCase() as keyof typeof severityThemes;
+  const severityStyles = severityThemes[severityKey] ?? severityThemes.default;
+
+  const overviewStats = useMemo(
+    () => [
+      { label: 'Category', value: reportData?.category ?? 'N/A' },
+      { label: 'Jurisdiction', value: incidentData.jurisdiction || 'Not specified' },
+      { label: 'Case Number', value: reportData?.caseNumber || incidentData.caseNumber || 'N/A' }
+    ],
+    [incidentData.caseNumber, incidentData.jurisdiction, reportData?.caseNumber, reportData?.category]
+  );
+  const [primaryStat, ...secondaryStats] = overviewStats;
+
+  const severityJustificationHtml = useMemo(
+    () => formatHtml(reportData?.severityJustification),
+    [reportData?.severityJustification]
+  );
+  const summaryHtml = useMemo(
+    () => formatHtml(reportData?.professionalSummary),
+    [reportData?.professionalSummary]
+  );
+  const legalInsightsHtml = useMemo(
+    () => formatHtml(reportData?.legalInsights),
+    [reportData?.legalInsights]
+  );
 
   const sources = reportData?.sources ?? [];
+  const inlineReferences = useMemo(
+    () => extractMarkdownLinks(reportData?.legalInsights),
+    [reportData?.legalInsights]
+  );
+  const referenceMap = useMemo(() => {
+    const map = new Map<string, LegalReference>();
+    inlineReferences.forEach(ref => map.set(ref.url, ref));
+    return map;
+  }, [inlineReferences]);
+
+  const { statuteReferences, caseLawReferences, potentialSources } = useMemo(() => {
+    const statuteRefs: LegalReference[] = [];
+    const caseLawRefs: LegalReference[] = [];
+    const infoSources: string[] = [];
+
+    sources.forEach(url => {
+      if (isCaseLawSource(url)) {
+        caseLawRefs.push(referenceMap.get(url) ?? { label: deriveReadableTitle(url), url });
+      } else {
+        infoSources.push(url);
+        if (!referenceMap.has(url) && inlineReferences.length > 0) {
+          statuteRefs.push({ label: deriveReadableTitle(url), url });
+        }
+      }
+    });
+
+    // Add inline-only statute references that may not be in sources
+    inlineReferences.forEach(ref => {
+      if (!isCaseLawSource(ref.url) && !statuteRefs.find(item => item.url === ref.url)) {
+        statuteRefs.push(ref);
+      }
+      if (isCaseLawSource(ref.url) && !caseLawRefs.find(item => item.url === ref.url)) {
+        caseLawRefs.push(ref);
+      }
+    });
+
+    return {
+      statuteReferences: statuteRefs,
+      caseLawReferences: caseLawRefs,
+      potentialSources: infoSources,
+    };
+  }, [inlineReferences, referenceMap, sources]);
+  const evidenceCount = incidentData.evidence.length;
+  const evidenceLabel = `${evidenceCount} ${evidenceCount === 1 ? 'Item' : 'Items'}`;
 
   const getDomainFromUrl = (url: string): string => {
     try {
@@ -274,139 +316,406 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     }
   };
 
+  const handleCopySummary = useCallback(async () => {
+    const summaryText =
+      summaryRef.current?.innerText?.trim() ?? reportData?.professionalSummary?.trim() ?? '';
+
+    if (!summaryText) {
+      setCopyState('error');
+      setTimeout(() => setCopyState('idle'), 2000);
+      return;
+    }
+
+    const fallbackCopy = () => {
+      if (typeof document === 'undefined') {
+        throw new Error('Document is not available');
+      }
+      const temp = document.createElement('textarea');
+      temp.value = summaryText;
+      temp.setAttribute('readonly', '');
+      temp.style.position = 'absolute';
+      temp.style.left = '-9999px';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    };
+
+    const resetStatus = () => {
+      setTimeout(() => setCopyState('idle'), 2000);
+    };
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(summaryText);
+      } else {
+        fallbackCopy();
+      }
+      setCopyState('copied');
+      resetStatus();
+    } catch {
+      try {
+        fallbackCopy();
+        setCopyState('copied');
+      } catch {
+        setCopyState('error');
+      } finally {
+        resetStatus();
+      }
+    }
+  }, [reportData?.professionalSummary]);
+
   if (isGeneratingSummary) {
     return <LoadingSpinner />;
   }
 
   if (!reportData) {
     return (
-      <div className={`${CARD_CLASS} p-10 text-center text-sm text-slate-300`}>
+      <div className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-10 text-center text-sm text-[#CFCBBF]/80 shadow-2xl">
         <p>No AI summary is available yet. Generate the report to review the analysis.</p>
       </div>
     );
   }
 
+  const renderHtml = (html: string, emptyFallback = 'Information is not yet available.') => ({
+    __html: html || `<p class="text-[#CFCBBF]">${emptyFallback}</p>`,
+  });
+
+  const summaryButtonLabel =
+    copyState === 'copied' ? '✓ Copied' : copyState === 'error' ? 'Copy failed' : 'Copy summary';
+
   return (
-    <div className="space-y-10">
-      <header className="space-y-3 text-center lg:text-left">
-        <h2
+    <div className="space-y-10 text-[#CFCBBF] leading-relaxed font-normal">
+      <OutlineCard
+        borderClassName="border-white/10"
+        backgroundClassName="bg-gradient-to-br from-slate-950/85 via-slate-950/60 to-slate-900/60"
+        className="sm:p-8"
+      >
+        <H3 className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FFD700]">
+          AI Generated Report
+        </H3>
+        <H1
           ref={headingRef}
           tabIndex={-1}
-          className="text-3xl font-semibold tracking-tight text-amber-200 outline-none"
+          className="heading-gold mt-3 text-3xl sm:text-4xl font-normal leading-tight"
         >
-          Review &amp; Finalize
-        </h2>
-        <p className="mx-auto max-w-2xl text-sm text-slate-400 lg:mx-0">
-          Scan the generated report, ensure the details align with your records, and add any personal
-          notes before exporting or printing the final document.
+          Incident Report: {reportData.title || 'Pending Title'}
+        </H1>
+        <p className="mt-4 text-sm text-[#CFCBBF]">
+          Prepared by CustodyBuddy Incident Reporter • {generatedAt}
         </p>
-      </header>
+      </OutlineCard>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-        <div className="space-y-6">
-          {detailSections.map(section => (
-            <DetailSection key={section.title} title={section.title} body={section.body} isHtml={section.isHtml} />
-          ))}
-
-          <SectionCard
-            title="Reference Sources"
-            description="Authoritative links surfaced by the AI analysis."
-          >
-            {sources.length > 0 ? (
-              <div className="grid gap-3">
-                {sources.map((source, index) => (
-                  <ResourceLink
-                    key={source}
-                    href={source}
-                    domain={getDomainFromUrl(source)}
-                    index={index}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">No external sources were provided for this report.</p>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Evidence On File"
-            description="Files and notes you attached while documenting the incident."
-          >
-            {incidentData.evidence.length > 0 ? (
-              <div className="space-y-4">
-                {incidentData.evidence.map(evidence => (
-                  <article
-                    key={evidence.id}
-                    className="rounded-xl border border-slate-800/70 bg-slate-900/60 p-4 text-sm text-slate-200"
-                  >
-                    <header className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="font-semibold text-amber-200 break-all">{evidence.name}</p>
-                      <span className="text-xs text-slate-500">
-                        {(evidence.size / 1024).toFixed(1)} kB
-                      </span>
-                    </header>
-                    <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
-                      <div>
-                        <dt className="font-medium text-slate-300">Category</dt>
-                        <dd>{evidence.category}</dd>
-                      </div>
-                      <div>
-                        <dt className="font-medium text-slate-300">Description</dt>
-                        <dd>{evidence.description || 'Not documented'}</dd>
-                      </div>
-                    </dl>
-                    {evidence.aiAnalysis ? (
-                      <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-400/5 p-3 text-xs text-amber-100">
-                        <span className="font-semibold text-amber-200">AI insight:</span>{' '}
-                        {evidence.aiAnalysis}
-                      </p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">No supporting evidence was uploaded.</p>
-            )}
-          </SectionCard>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {primaryStat ? <StatCard label={primaryStat.label} value={primaryStat.value} /> : null}
+        <div className={`rounded-2xl border p-4 shadow-lg ${severityStyles.card}`}>
+          <p className={`heading-gold text-xs font-normal uppercase tracking-[0.3em] ${severityStyles.label}`}>
+            Severity
+          </p>
+          <p className={`mt-2 text-2xl font-semibold ${severityStyles.value}`}>
+            {reportData.severity ?? 'N/A'}
+          </p>
         </div>
+        {secondaryStats.map(stat => (
+          <StatCard key={stat.label} label={stat.label} value={stat.value} />
+        ))}
+      </section>
 
-        <aside className="space-y-6">
-          <SectionCard title="Report Overview">
-            <div className="space-y-3">
-              {metadata.map(meta => (
-                <MetadataStat key={meta.label} icon={meta.icon} label={meta.label} value={meta.value} />
-              ))}
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <OutlineCard>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-[#F4E883]">Professional Summary</p>
+              <H3 className="heading-gold text-2xl font-normal tracking-tight">Review The Narrative</H3>
             </div>
-          </SectionCard>
+            <button
+              type="button"
+              onClick={handleCopySummary}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-[#F4E883] focus-visible:outline-offset-2 ${
+                copyState === 'copied'
+                  ? 'bg-[#3AD79B] text-[#011626]'
+                  : copyState === 'error'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-[#FFD700] text-[#011626] hover:bg-[#F4E883]'
+              }`}
+            >
+              {summaryButtonLabel}
+            </button>
+          </div>
+          <div
+            ref={summaryRef}
+            className="prose prose-invert prose-base mt-6 max-w-none space-y-4 text-[#CFCBBF]"
+            dangerouslySetInnerHTML={renderHtml(summaryHtml, 'Summary has not been generated yet.')}
+          />
+        </OutlineCard>
 
-          <SectionCard title="Personal Notes" description="Visible only to you and not included in exports.">
-            <textarea
-              ref={notesRef}
-              id="personal-notes"
-              value={personalNotes}
-              onChange={event => setPersonalNotes(event.target.value)}
-              placeholder="Capture reminders or follow-up items before you export."
-              className="w-full resize-none rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-400 focus:ring-4 focus:ring-amber-300/40 placeholder:text-slate-500"
-              style={{ minHeight: NOTES_MIN_HEIGHT }}
+        <div className="space-y-6">
+          <article
+            className={`rounded-3xl p-6 shadow-[0_18px_40px_rgba(0,0,0,0.45)] ${severityStyles.card}`}
+          >
+            <div className="flex items-center justify-between">
+              <H3 className={`heading-gold text-xl font-normal ${severityStyles.label}`}>Severity Rationale</H3>
+              <span className={`text-sm font-semibold ${severityStyles.value}`}>
+                {reportData.severity ?? 'N/A'}
+              </span>
+            </div>
+            <div
+              className="prose prose-invert prose-sm mt-4 max-w-none text-[#CFCBBF]"
+              dangerouslySetInnerHTML={renderHtml(severityJustificationHtml)}
             />
-          </SectionCard>
+          </article>
 
-          <SectionCard title="Next Steps" className="flex flex-col gap-6" description="Choose how you want to share or store the report.">
+          <OutlineCard backgroundClassName="bg-[#021223]" className="space-y-4">
+            <div>
+              <H3 className="heading-gold text-xl font-normal">Share &amp; Store</H3>
+              <p className="text-sm text-[#CFCBBF]/85">
+                Export a printable package or open the browser print dialog to save a PDF copy.
+              </p>
+            </div>
             <div className="flex flex-col gap-3">
               <Button onClick={onExport} className="justify-center">
-                Export report
+                Export HTML Report
               </Button>
-              <Button onClick={onPrint} variant="secondary" className="justify-center">
-                Print summary
+              <Button variant="secondary" onClick={onPrint} className="justify-center">
+                Print / Save PDF
               </Button>
             </div>
-            <p className="text-xs text-slate-500">
-              Your data remains encrypted in this browser session until you export or print. Make sure to
-              store the generated file securely.
+            <p className="text-xs text-[#CFCBBF]/70">
+              Files remain local to this device until you export or print. Always secure sensitive data
+              before sharing.
             </p>
-          </SectionCard>
-        </aside>
-      </div>
+          </OutlineCard>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-[#F4E883] bg-[#01192C] p-6 shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <H3 className="heading-gold text-2xl font-normal">
+            Evidence Log <span className="text-sm font-semibold text-[#CFCBBF]/80">({evidenceLabel})</span>
+          </H3>
+          {evidenceCount > 0 && (
+            <span className="rounded-full border border-[#F4E883] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[#F4E883]">
+              Maintain secure backups
+            </span>
+          )}
+        </div>
+        {evidenceCount > 0 ? (
+          <div className="mt-6 space-y-4">
+            {incidentData.evidence.map((evidence, index) => (
+              <article
+                key={evidence.id}
+                className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 text-sm text-[#CFCBBF] shadow-lg shadow-black/20"
+              >
+                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F4E883]/30 pb-2">
+                  <p className="font-semibold text-[#FFD700]">
+                    EVIDENCE {String(index + 1).padStart(3, '0')}: {evidence.name}
+                  </p>
+                  <span className="text-xs text-[#CFCBBF]/70">
+                    {(evidence.size / 1024).toFixed(1)} kB · {evidence.category}
+                  </span>
+                </header>
+                <dl className="mt-3 grid gap-3 text-xs text-[#CFCBBF]/80 sm:grid-cols-2">
+                  <div>
+                    <dt className="font-semibold uppercase tracking-widest text-[#F7EF8A]/80">Type</dt>
+                    <dd className="mt-1 text-[#CFCBBF]">{evidence.type || 'Not provided'}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold uppercase tracking-widest text-[#F7EF8A]/80">
+                      Description
+                    </dt>
+                    <dd className="mt-1 text-[#CFCBBF]">
+                      {evidence.description || 'Not documented'}
+                    </dd>
+                  </div>
+                </dl>
+                {evidence.aiAnalysis ? (
+                      <p className="mt-3 rounded-2xl border border-[#F4E883]/40 bg-[#071B2A] p-3 text-xs text-[#CFCBBF]">
+                        <span className="heading-gold font-normal">AI insight:</span>{' '}
+                        {evidence.aiAnalysis}
+                      </p>
+                ) : null}
+              </article>
+            ))}
+            <article className="rounded-2xl border border-[#F4E883]/50 bg-[#021223] p-4 text-sm text-[#CFCBBF]">
+              <H3 className="heading-gold font-normal uppercase tracking-widest text-base">Reminder</H3>
+              <p className="mt-1">
+                Keep digital and physical copies of all evidence securely stored with timestamps for
+                counsel or court staff.
+              </p>
+            </article>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-[#CFCBBF]/85">No supporting evidence was uploaded.</p>
+        )}
+      </section>
+
+      <section className="space-y-8">
+        <H2 className="print-page-break heading-gold text-2xl font-normal mt-10 mb-2 border-l-4 border-[#F4E883] pl-4 tracking-tight">
+          II. Additional Legal Context
+        </H2>
+        <OutlineCard className="space-y-8">
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 border-b border-[#F4E883]/30 pb-2">
+              <H3 className="heading-gold text-xl font-normal">III. Key Legal Narrative</H3>
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#F4E883]">
+                Informational Only
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-[#F4E883]">
+              Disclaimer: This is not legal advice. Validate with licensed counsel in your jurisdiction.
+            </p>
+            <div
+              className="prose prose-invert prose-sm max-w-none text-[#CFCBBF]"
+              dangerouslySetInnerHTML={renderHtml(legalInsightsHtml, 'No legal insights were generated.')}
+            />
+          </section>
+
+          <section className="space-y-4">
+            <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
+              IV. Governing Statutes (The Written Law)
+            </H3>
+            {statuteReferences.length > 0 ? (
+              <div className="space-y-4 text-[#CFCBBF]">
+                {statuteReferences.map((ref, index) => (
+                  <div
+                    key={ref.url}
+                    className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 shadow-lg shadow-black/30"
+                  >
+                    <strong className="heading-gold block text-base font-normal">
+                      {index + 1}. {ref.label}
+                    </strong>
+                    <a
+                      href={ref.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
+                    >
+                      Source URL: {ref.url}
+                    </a>
+                    <p className="text-sm mt-2 text-[#CFCBBF]/90">
+                      {ref.context || 'Reference this authority when documenting how the incident aligns with statutory requirements.'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-[#CFCBBF]/80">
+                The AI summary did not cite specific statutes for this incident.
+              </p>
+            )}
+          </section>
+
+          {caseLawReferences.length > 0 ? (
+            <section className="space-y-4">
+              <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
+                V. High-Precedent Case Law (Judicial Interpretation)
+              </H3>
+              <div className="space-y-4 text-[#CFCBBF]">
+                {caseLawReferences.map((ref, index) => (
+                  <div
+                    key={ref.url}
+                    className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 shadow-lg shadow-black/30"
+                  >
+                    <strong className="heading-gold block text-base font-normal">
+                      {index + 1}. {ref.label || deriveReadableTitle(ref.url)}
+                    </strong>
+                    <p className="text-xs text-[#CFCBBF]/70">Jurisdiction: {getDomainFromUrl(ref.url)}</p>
+                    <a
+                      href={ref.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
+                    >
+                      Citation Link: {ref.url}
+                    </a>
+                    <p className="text-sm mt-2 text-[#CFCBBF]/90">
+                      {ref.context || 'Review this case to understand how courts weigh similar fact patterns.'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          <section className="space-y-3">
+            <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
+              VI. Related Legal Concepts / Glossary
+            </H3>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-3 shadow-inner shadow-black/20">
+                <strong className="heading-gold block text-base font-normal">Document Preservation</strong>
+                <p className="text-sm text-[#CFCBBF]/90">
+                  Keep certified copies of every exhibit (screenshots, emails, call logs) with timestamps
+                  for court submission.
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-3 shadow-inner shadow-black/20">
+                <strong className="heading-gold block text-base font-normal">Best Interests Analysis</strong>
+                <p className="text-sm text-[#CFCBBF]/90">
+                  Courts prioritize child safety, stability, and continuity of care when reviewing
+                  co-parenting disputes.
+                </p>
+              </div>
+            </div>
+          </section>
+        </OutlineCard>
+
+        <H2 className="heading-gold text-2xl font-normal mt-8 mb-3 border-l-4 border-[#F4E883] pl-4">
+          Potential Legal & Informational Sources
+        </H2>
+        <OutlineCard>
+          {potentialSources.length > 0 ? (
+            <ul className="list-disc space-y-3 pl-5 text-sm text-[#CFCBBF]">
+              {potentialSources.map(url => (
+                <li key={url} className="space-y-1">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
+                  >
+                    {deriveReadableTitle(url)}
+                  </a>
+                  <p className="text-xs text-[#CFCBBF]/70 italic">{url}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[#CFCBBF]/80">
+              No supplemental research links were attached for this report.
+            </p>
+          )}
+        </OutlineCard>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <OutlineCard>
+          <H3 className="heading-gold text-xl font-normal">Personal Notes (Private)</H3>
+          <p className="mt-1 text-xs text-[#CFCBBF]/70">
+            These notes remain local to this browser session and are never exported.
+          </p>
+          <textarea
+            ref={notesRef}
+            id="personal-notes"
+            value={personalNotes}
+            onChange={event => setPersonalNotes(event.target.value)}
+            placeholder="Capture follow-up actions, reminders, or attorney questions…"
+            className="mt-4 w-full resize-none rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-[#CFCBBF] outline-none transition focus:border-[#F4E883] focus:ring-4 focus:ring-[#F4E883]/30 placeholder:text-[#CFCBBF]/40"
+            style={{ minHeight: NOTES_MIN_HEIGHT }}
+          />
+        </OutlineCard>
+        <OutlineCard>
+          <H3 className="heading-gold text-xl font-normal">Session Security</H3>
+          <p className="text-sm text-[#CFCBBF]/90">
+            This workspace encrypts data locally and purges it when you reset the incident or close the tab.
+          </p>
+          <ul className="list-disc space-y-2 pl-5 text-sm text-[#CFCBBF]/85">
+            <li>Keep exported files on encrypted or access-controlled drives.</li>
+            <li>Only share reports with counsel or professionals bound by confidentiality.</li>
+            <li>Delete temporary downloads after you deliver them.</li>
+          </ul>
+        </OutlineCard>
+      </section>
     </div>
   );
 };

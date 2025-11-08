@@ -1,5 +1,6 @@
 import React from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '../../../types';
+import H1 from '../ui/H1';
 
 interface Step2Props {
   data: Pick<IncidentData, 'narrative'>;
@@ -15,7 +16,7 @@ const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-amber-400 mb-2">The Incident Narrative</h2>
+        <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">The Incident Narrative</H1>
         <p className="text-slate-400 max-w-md mx-auto">Describe the incident objectively. Our AI will filter out emotional language for the professional report.</p>
       </div>
       <div className="max-w-4xl mx-auto">
