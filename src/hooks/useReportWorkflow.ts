@@ -6,7 +6,11 @@ import {
   generateLegalInsights,
   generateProfessionalSummary,
 } from '../services/geminiService';
-import { exportReportToHTML, printReport } from '../components/ui/utils/export';
+import {
+  exportReportToHTML,
+  printReport,
+  type ReportHelperResult,
+} from '../components/ui/utils/export';
 import { useIncidentState } from './useIncidentState';
 
 type ModalRequest = Omit<ModalInfo, 'onClose'> & { onClose?: () => void };
@@ -131,31 +135,52 @@ export const useReportWorkflow = () => {
     });
   }, [resetIncident, showModal]);
 
+  const showHelperResultModal = useCallback(
+    (result: ReportHelperResult) => {
+      showModal({
+        title: result.title,
+        message: result.message,
+        type: result.modalType,
+      });
+    },
+    [showModal],
+  );
+
   const handleExport = useCallback(() => {
-    if (reportData) {
-      markClean();
-      exportReportToHTML(reportData, incidentData, showModal);
-    } else {
+    if (!reportData) {
       showModal({
         title: 'Export Error',
         message: 'Report data is missing. Please generate the summary first.',
         type: 'error',
       });
+      return;
     }
-  }, [incidentData, markClean, reportData, showModal]);
+
+    const result = exportReportToHTML(reportData, incidentData);
+    if (result.ok) {
+      markClean();
+    }
+    showHelperResultModal(result);
+  }, [incidentData, markClean, reportData, showHelperResultModal, showModal]);
 
   const handlePrint = useCallback(() => {
-    if (reportData) {
-      markClean();
-      printReport(reportData, incidentData, showModal);
-    } else {
+    if (!reportData) {
       showModal({
         title: 'Print Error',
         message: 'Report data is missing. Please generate the summary first.',
         type: 'error',
       });
+      return;
     }
-  }, [incidentData, markClean, reportData, showModal]);
+
+    void (async () => {
+      const result = await printReport(reportData, incidentData);
+      if (result.ok) {
+        markClean();
+      }
+      showHelperResultModal(result);
+    })();
+  }, [incidentData, markClean, reportData, showHelperResultModal, showModal]);
 
   return {
     incidentData,
