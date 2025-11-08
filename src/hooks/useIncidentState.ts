@@ -130,16 +130,22 @@ export const useIncidentState = () => {
     []
   );
 
-  const validateCurrentStep = useCallback((): boolean => {
-    const validationErrors = computeValidationErrors(currentStep, incidentData);
-    setErrors(validationErrors);
-    return Object.keys(validationErrors).length === 0;
-  }, [computeValidationErrors, currentStep, incidentData]);
-
-  const canProceed = useMemo(
-    () => Object.keys(computeValidationErrors(currentStep, incidentData)).length === 0,
+  const currentValidationErrors = useMemo(
+    () => computeValidationErrors(currentStep, incidentData),
     [computeValidationErrors, currentStep, incidentData]
   );
+
+  const isCurrentStepValid = useMemo(
+    () => Object.keys(currentValidationErrors).length === 0,
+    [currentValidationErrors]
+  );
+
+  const validateCurrentStep = useCallback((): boolean => {
+    setErrors(currentValidationErrors);
+    return isCurrentStepValid;
+  }, [currentValidationErrors, isCurrentStepValid]);
+
+  const canProceed = isCurrentStepValid;
 
   const updateIncidentData = useCallback(
     <K extends keyof IncidentData>(
