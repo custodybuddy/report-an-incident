@@ -4,7 +4,7 @@ import {
   compileLegalReferences,
   deriveReadableTitle,
   getDomainFromUrl,
-} from '@/components/steps/Step5Review/hooks/useLegalReferences';
+} from '@/services/reportReferences';
 
 type SeverityTheme = {
   background: string;

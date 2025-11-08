@@ -5,8 +5,11 @@ import MetadataBadge from '../../../ui/MetadataBadge';
 import OutlineCard from '../../../ui/OutlineCard';
 import { ResourceLinkCard, ResourceLinkList } from '../../../ui/ResourceLinks';
 import { renderHtmlWithFallback } from '../utils/html';
-import type { LegalReference } from '../hooks/useLegalReferences';
-import { deriveReadableTitle, getDomainFromUrl } from '../hooks/useLegalReferences';
+import {
+  deriveReadableTitle,
+  getDomainFromUrl,
+  type LegalReference,
+} from '@/services/reportReferences';
 
 interface LegalReferencesSectionProps {
   legalInsightsHtml: string;
