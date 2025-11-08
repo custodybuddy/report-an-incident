@@ -39,10 +39,12 @@ const compareSnapshot = (name: string, actual: string) => {
   const expected = readSnapshot(name);
   if (!expected || process.env.UPDATE_STEP5_SNAPSHOTS === 'true') {
     writeSnapshot(name, actual.trim());
+    console.log(`Updated Step 5 snapshot: ${name}`);
     return;
   }
 
   assert.equal(actual.trim(), expected.trim(), `${name} snapshot mismatch`);
+  console.log(`✔ Step 5 snapshot verified: ${name}`);
 };
 
 const renderSeveritySummary = () => {
@@ -106,10 +108,12 @@ const renderGlossaryTiles = () => {
   compareSnapshot('GlossaryTile', markup);
 };
 
-export const runSnapshots = () => {
+export const runSnapshots = async () => {
   renderSeveritySummary();
   renderSeverityRationale();
   renderEvidenceCard();
   renderResourceLinks();
   renderGlossaryTiles();
+
+  console.log('\nAll Step 5 UI snapshots are up to date.');
 };
