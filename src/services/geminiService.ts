@@ -2,10 +2,18 @@ import { GoogleGenAI, Type, type GenerateContentResponse } from "@google/genai";
 import { type IncidentData, type EvidenceFile } from '../../types';
 import { getEvidenceData } from './evidenceStore';
 
-const API_KEY = process.env.API_KEY;
+const resolveApiKey = (): string | undefined => {
+  const { VITE_GEMINI_API_KEY, VITE_API_KEY } = import.meta.env;
+  const key = VITE_GEMINI_API_KEY || VITE_API_KEY;
+  return key?.trim() || undefined;
+};
+
+const API_KEY = resolveApiKey();
 
 if (!API_KEY) {
-  console.warn("API_KEY environment variable not set. Gemini API calls will fail.");
+  console.warn(
+    "VITE_GEMINI_API_KEY environment variable not set. Gemini API calls will fail."
+  );
 }
 
 const MODEL_NAME = 'gemini-2.5-flash';
@@ -13,12 +21,15 @@ const MODEL_NAME = 'gemini-2.5-flash';
 let cachedClient: GoogleGenAI | null = null;
 
 const getClient = (): GoogleGenAI => {
-  if (!API_KEY) {
-    throw new Error('Gemini API key is not configured. Please set the GEMINI_API_KEY environment variable.');
+  const apiKey = resolveApiKey();
+  if (!apiKey) {
+    throw new Error(
+      'Gemini API key is not configured. Please set the VITE_GEMINI_API_KEY environment variable.'
+    );
   }
 
   if (!cachedClient) {
-    cachedClient = new GoogleGenAI({ apiKey: API_KEY });
+    cachedClient = new GoogleGenAI({ apiKey });
   }
 
   return cachedClient;

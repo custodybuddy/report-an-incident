@@ -99,5 +99,26 @@ export const deleteEvidenceData = async (id: string): Promise<void> => {
 export const deleteEvidenceBatch = async (ids: string[]): Promise<void> => {
   if (ids.length === 0) return;
 
-  await Promise.all(ids.map(id => deleteEvidenceData(id)));
+  if (!isIndexedDBAvailable) {
+    ids.forEach(id => memoryStore.delete(id));
+    return;
+  }
+
+  const db = await getDatabase();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+
+    const handleError = () =>
+      reject(transaction.error ?? new Error('IndexedDB batch delete failed'));
+
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = handleError;
+    transaction.onabort = handleError;
+
+    ids.forEach(id => {
+      store.delete(id);
+    });
+  });
 };
