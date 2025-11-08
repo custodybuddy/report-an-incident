@@ -81,63 +81,64 @@ export const getDomainFromUrl = (url: string): string => {
   }
 };
 
-interface UseLegalReferencesOptions {
+export interface UseLegalReferencesOptions {
   legalInsights?: string | null;
   sources: string[];
 }
 
+export interface LegalReferencesResult {
+  statuteReferences: LegalReference[];
+  caseLawReferences: LegalReference[];
+  potentialSources: string[];
+}
+
+export const compileLegalReferences = ({
+  legalInsights,
+  sources,
+}: UseLegalReferencesOptions): LegalReferencesResult => {
+  const inlineReferences = extractMarkdownLinks(legalInsights ?? undefined);
+
+  const referenceMap = new Map<string, LegalReference>();
+  inlineReferences.forEach(ref => referenceMap.set(ref.url, ref));
+
+  const statuteRefs: LegalReference[] = [];
+  const caseLawRefs: LegalReference[] = [];
+  const infoSources: string[] = [];
+
+  sources.forEach(url => {
+    if (isCaseLawSource(url)) {
+      caseLawRefs.push(referenceMap.get(url) ?? { label: deriveReadableTitle(url), url });
+    } else {
+      infoSources.push(url);
+      if (!referenceMap.has(url) && inlineReferences.length > 0) {
+        statuteRefs.push({ label: deriveReadableTitle(url), url });
+      }
+    }
+  });
+
+  inlineReferences.forEach(ref => {
+    if (!isCaseLawSource(ref.url) && !statuteRefs.find(item => item.url === ref.url)) {
+      statuteRefs.push(ref);
+    }
+    if (isCaseLawSource(ref.url) && !caseLawRefs.find(item => item.url === ref.url)) {
+      caseLawRefs.push(ref);
+    }
+  });
+
+  return {
+    statuteReferences: statuteRefs,
+    caseLawReferences: caseLawRefs,
+    potentialSources: infoSources,
+  };
+};
+
 export const useLegalReferences = ({
   legalInsights,
   sources,
-}: UseLegalReferencesOptions) => {
-  const inlineReferences = useMemo(
-    () => extractMarkdownLinks(legalInsights ?? undefined),
-    [legalInsights]
+}: UseLegalReferencesOptions) =>
+  useMemo(
+    () => compileLegalReferences({ legalInsights, sources }),
+    [legalInsights, sources]
   );
-
-  const referenceMap = useMemo(() => {
-    const map = new Map<string, LegalReference>();
-    inlineReferences.forEach(ref => map.set(ref.url, ref));
-    return map;
-  }, [inlineReferences]);
-
-  const { statuteReferences, caseLawReferences, potentialSources } = useMemo(() => {
-    const statuteRefs: LegalReference[] = [];
-    const caseLawRefs: LegalReference[] = [];
-    const infoSources: string[] = [];
-
-    sources.forEach(url => {
-      if (isCaseLawSource(url)) {
-        caseLawRefs.push(referenceMap.get(url) ?? { label: deriveReadableTitle(url), url });
-      } else {
-        infoSources.push(url);
-        if (!referenceMap.has(url) && inlineReferences.length > 0) {
-          statuteRefs.push({ label: deriveReadableTitle(url), url });
-        }
-      }
-    });
-
-    inlineReferences.forEach(ref => {
-      if (!isCaseLawSource(ref.url) && !statuteRefs.find(item => item.url === ref.url)) {
-        statuteRefs.push(ref);
-      }
-      if (isCaseLawSource(ref.url) && !caseLawRefs.find(item => item.url === ref.url)) {
-        caseLawRefs.push(ref);
-      }
-    });
-
-    return {
-      statuteReferences: statuteRefs,
-      caseLawReferences: caseLawRefs,
-      potentialSources: infoSources,
-    };
-  }, [inlineReferences, referenceMap, sources]);
-
-  return {
-    statuteReferences,
-    caseLawReferences,
-    potentialSources,
-  };
-};
 
 export default useLegalReferences;
