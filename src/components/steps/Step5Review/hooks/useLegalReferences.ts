@@ -1,16 +1,9 @@
 import { useMemo } from 'react';
 
 import {
-  compileLegalReferences as compileLegalReferencesInternal,
+  compileLegalReferences,
   type LegalReferencesOptions,
   type LegalReferencesResult,
-} from '@/services/reportReferences';
-
-export type { LegalReference } from '@/services/reportReferences';
-export {
-  compileLegalReferences,
-  deriveReadableTitle,
-  getDomainFromUrl,
 } from '@/services/reportReferences';
 
 export interface UseLegalReferencesOptions extends LegalReferencesOptions {}
@@ -21,7 +14,7 @@ export const useLegalReferences = ({
   sources,
 }: UseLegalReferencesOptions): UseLegalReferencesResult =>
   useMemo(
-    () => compileLegalReferencesInternal({ legalInsights, sources }),
+    () => compileLegalReferences({ legalInsights, sources }),
     [legalInsights, sources],
   );
 
