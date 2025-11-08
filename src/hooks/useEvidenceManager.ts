@@ -1,20 +1,11 @@
 import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
 import type { EvidenceFile, IncidentDataUpdater } from '@/types';
-import { saveEvidenceData as defaultSaveEvidenceData, deleteEvidenceData as defaultDeleteEvidenceData } from '../services/evidenceStore';
-import { analyzeEvidence as defaultAnalyzeEvidence } from '../services/geminiService';
+import {
+  defaultEvidenceManagerServices,
+  type EvidenceManagerServices
+} from '../services/evidenceManagement';
 
 type EditableEvidenceField = 'category' | 'description';
-
-const generateEvidenceId = () =>
-  (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `evidence-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-
-const supportsAnalysis = (mimeType: string): boolean =>
-  mimeType.startsWith('image/') ||
-  mimeType.startsWith('audio/') ||
-  mimeType.startsWith('video/') ||
-  mimeType === 'application/pdf';
 
 interface UseEvidenceManagerArgs {
   narrative: string;
@@ -38,25 +29,21 @@ const readFileAsBase64 = (file: File): Promise<PreparedEvidenceResult> =>
     reader.readAsDataURL(file);
   });
 
-const dependencies = {
-  saveEvidenceData: defaultSaveEvidenceData,
-  deleteEvidenceData: defaultDeleteEvidenceData,
-  analyzeEvidence: defaultAnalyzeEvidence
-};
+const services: EvidenceManagerServices = { ...defaultEvidenceManagerServices };
 
-export const __setEvidenceManagerDependencies = (overrides: Partial<typeof dependencies>) => {
-  Object.assign(dependencies, overrides);
+export const __setEvidenceManagerDependencies = (overrides: Partial<EvidenceManagerServices>) => {
+  Object.assign(services, overrides);
 };
 
 export const __resetEvidenceManagerDependencies = () => {
-  dependencies.saveEvidenceData = defaultSaveEvidenceData;
-  dependencies.deleteEvidenceData = defaultDeleteEvidenceData;
-  dependencies.analyzeEvidence = defaultAnalyzeEvidence;
+  services.persistence = defaultEvidenceManagerServices.persistence;
+  services.analysis = defaultEvidenceManagerServices.analysis;
+  services.id = defaultEvidenceManagerServices.id;
 };
 
 const persistEvidenceSafely = async (id: string, base64: string) => {
   try {
-    await dependencies.saveEvidenceData(id, base64);
+    await services.persistence.save(id, base64);
   } catch (error) {
     console.warn('Failed to persist evidence in IndexedDB', error);
   }
@@ -64,7 +51,7 @@ const persistEvidenceSafely = async (id: string, base64: string) => {
 
 const removeEvidenceSafely = async (id: string) => {
   try {
-    await dependencies.deleteEvidenceData(id);
+    await services.persistence.remove(id);
   } catch (error) {
     console.warn('Failed to delete evidence from IndexedDB', error);
   }
@@ -108,7 +95,7 @@ export const useEvidenceManager = ({
 
         const preparedEvidence: EvidenceFile[] = await Promise.all(
           results.map(async ({ file, base64 }) => {
-            const id = generateEvidenceId();
+            const id = services.id.generate();
             await persistEvidenceSafely(id, base64);
 
             return {
@@ -119,7 +106,7 @@ export const useEvidenceManager = ({
               type: file.type,
               category: 'Other',
               description: '',
-              base64: supportsAnalysis(file.type) ? base64 : undefined
+              base64: services.analysis.supports(file.type) ? base64 : undefined
             } satisfies EvidenceFile;
           })
         );
@@ -127,13 +114,13 @@ export const useEvidenceManager = ({
         updateData('evidence', prev => [...prev.evidence, ...preparedEvidence]);
 
         preparedEvidence.forEach(newFile => {
-          if (!supportsAnalysis(newFile.type) || !newFile.base64) {
+          if (!services.analysis.supports(newFile.type) || !newFile.base64) {
             return;
           }
 
           setAnalysisState(prev => ({ ...prev, [newFile.id]: true }));
 
-          dependencies.analyzeEvidence(newFile, narrative)
+          services.analysis.analyze(newFile, narrative)
             .then(analysis => {
               updateData('evidence', prevIncident =>
                 prevIncident.evidence.map(item =>

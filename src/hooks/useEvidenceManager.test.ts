@@ -3,9 +3,17 @@ import { beforeEach, describe, test, mock } from 'node:test';
 import React from 'react';
 import type { IncidentData, IncidentDataUpdater } from '@/types';
 import { useEvidenceManager, __resetEvidenceManagerDependencies, __setEvidenceManagerDependencies } from './useEvidenceManager';
+import type {
+  EvidenceAnalysisService,
+  EvidenceIdService,
+  EvidencePersistenceService
+} from '@/services/evidenceManagement';
 
 type AsyncMock = ReturnType<typeof mock.fn>;
 
+let persistenceServiceMock: EvidencePersistenceService;
+let analysisServiceMock: EvidenceAnalysisService;
+let idServiceMock: EvidenceIdService;
 let saveEvidenceDataMock: AsyncMock;
 let deleteEvidenceDataMock: AsyncMock;
 let analyzeEvidenceMock: AsyncMock;
@@ -14,11 +22,22 @@ beforeEach(() => {
   saveEvidenceDataMock = mock.fn(async () => {});
   deleteEvidenceDataMock = mock.fn(async () => {});
   analyzeEvidenceMock = mock.fn(async () => '');
+  persistenceServiceMock = {
+    save: saveEvidenceDataMock,
+    remove: deleteEvidenceDataMock
+  };
+  analysisServiceMock = {
+    supports: mock.fn(() => true),
+    analyze: analyzeEvidenceMock
+  };
+  idServiceMock = {
+    generate: mock.fn(() => 'evidence-123')
+  };
   __resetEvidenceManagerDependencies();
   __setEvidenceManagerDependencies({
-    saveEvidenceData: saveEvidenceDataMock,
-    deleteEvidenceData: deleteEvidenceDataMock,
-    analyzeEvidence: analyzeEvidenceMock
+    persistence: persistenceServiceMock,
+    analysis: analysisServiceMock,
+    id: idServiceMock
   });
 });
 
