@@ -1,14 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IncidentData, ReportData } from '@/types';
-import H1 from '../../ui/H1';
 import H3 from '../../ui/H3';
-import OutlineCard from '../../ui/OutlineCard';
 import SummaryPanel from './components/SummaryPanel';
-import EvidenceList from './components/EvidenceList';
 import LegalReferencesSection from './components/LegalReferencesSection';
-import { useCopyToClipboard } from './hooks/useCopyToClipboard';
-import { useLegalReferences } from './hooks/useLegalReferences';
-import { formatHtmlContent } from './utils/html';
+import EvidenceSection from './components/EvidenceSection';
+import ReviewHeader from './components/ReviewHeader';
+import PersonalNotesSection from './components/PersonalNotesSection';
+import SessionSecuritySection from './components/SessionSecuritySection';
+import { useReviewReport } from './hooks/useReviewReport';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -27,33 +26,6 @@ const LOADING_MESSAGES = [
 ];
 
 const NOTES_MIN_HEIGHT = 220;
-
-const severityThemes = {
-  high: {
-    card: 'bg-[#2C0F12] border-[#FFB3B3]/60 shadow-[0_10px_25px_rgba(255,59,59,0.25)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#FFD7A3]',
-    accent: 'text-[#FFD700]',
-  },
-  medium: {
-    card: 'bg-[#2A1A04] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(244,232,131,0.2)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#F4E883]',
-    accent: 'text-[#FFD700]',
-  },
-  low: {
-    card: 'bg-[#0a2a1f] border-[#6fe0b1]/50 shadow-[0_10px_25px_rgba(0,128,96,0.2)]',
-    label: 'text-[#F4E883]',
-    value: 'text-[#CFEFDA]',
-    accent: 'text-[#F4E883]',
-  },
-  default: {
-    card: 'bg-[#01192C] border-[#F4E883]/60 shadow-[0_10px_25px_rgba(0,0,0,0.35)]',
-    label: 'text-[#FFD700]',
-    value: 'text-[#FFD700]',
-    accent: 'text-[#FFD700]',
-  },
-} as const;
 
 const LoadingSpinner: React.FC = () => {
   const [messageIndex, setMessageIndex] = useState(0);
@@ -103,14 +75,33 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
 }) => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
-  const summaryRef = useRef<HTMLDivElement>(null);
   const [personalNotes, setPersonalNotes] = useState('');
 
+  const {
+    hasReport,
+    reportTitle,
+    generatedAt,
+    summaryRef,
+    buttonLabel,
+    copyState,
+    handleCopy,
+    primaryStat,
+    secondaryStats,
+    severity,
+    severityStyles,
+    summaryHtml,
+    severityJustificationHtml,
+    legalInsightsHtml,
+    statuteReferences,
+    caseLawReferences,
+    potentialSources,
+  } = useReviewReport({ incidentData, reportData });
+
   useEffect(() => {
-    if (!isGeneratingSummary && reportData && headingRef.current) {
+    if (!isGeneratingSummary && hasReport && headingRef.current) {
       headingRef.current.focus({ preventScroll: true });
     }
-  }, [isGeneratingSummary, reportData]);
+  }, [hasReport, isGeneratingSummary]);
 
   useEffect(() => {
     const textarea = notesRef.current;
@@ -120,58 +111,11 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     textarea.style.height = `${Math.max(textarea.scrollHeight, NOTES_MIN_HEIGHT)}px`;
   }, [personalNotes]);
 
-  const generatedAt = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(new Date()),
-    []
-  );
-
-  const severityKey = (reportData?.severity ?? '').toLowerCase() as keyof typeof severityThemes;
-  const severityStyles = severityThemes[severityKey] ?? severityThemes.default;
-
-  const overviewStats = useMemo(
-    () => [
-      { label: 'Category', value: reportData?.category ?? 'N/A' },
-      { label: 'Jurisdiction', value: incidentData.jurisdiction || 'Not specified' },
-      { label: 'Case Number', value: reportData?.caseNumber || incidentData.caseNumber || 'N/A' },
-    ],
-    [incidentData.caseNumber, incidentData.jurisdiction, reportData?.caseNumber, reportData?.category]
-  );
-  const [primaryStat, ...secondaryStats] = overviewStats;
-
-  const severityJustificationHtml = useMemo(
-    () => formatHtmlContent(reportData?.severityJustification),
-    [reportData?.severityJustification]
-  );
-  const summaryHtml = useMemo(
-    () => formatHtmlContent(reportData?.professionalSummary),
-    [reportData?.professionalSummary]
-  );
-  const legalInsightsHtml = useMemo(
-    () => formatHtmlContent(reportData?.legalInsights),
-    [reportData?.legalInsights]
-  );
-
-  const { statuteReferences, caseLawReferences, potentialSources } = useLegalReferences({
-    legalInsights: reportData?.legalInsights,
-    sources: reportData?.sources ?? [],
-  });
-
-  const getSummaryText = useCallback(
-    () => summaryRef.current?.innerText?.trim() ?? reportData?.professionalSummary?.trim() ?? '',
-    [reportData?.professionalSummary]
-  );
-
-  const { copyState, handleCopy, buttonLabel } = useCopyToClipboard({ getText: getSummaryText });
-
   if (isGeneratingSummary) {
     return <LoadingSpinner />;
   }
 
-  if (!reportData) {
+  if (!hasReport) {
     return (
       <div className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-10 text-center text-sm text-[#CFCBBF]/80 shadow-2xl">
         <p>No AI summary is available yet. Generate the report to review the analysis.</p>
@@ -181,30 +125,12 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
 
   return (
     <div className="space-y-10 text-[#CFCBBF] leading-relaxed font-normal">
-      <OutlineCard
-        borderClassName="border-white/10"
-        backgroundClassName="bg-gradient-to-br from-slate-950/85 via-slate-950/60 to-slate-900/60"
-        className="sm:p-8"
-      >
-        <H3 className="text-xs font-semibold uppercase tracking-[0.3em] text-[#FFD700]">
-          AI Generated Report
-        </H3>
-        <H1
-          ref={headingRef}
-          tabIndex={-1}
-          className="heading-gold mt-3 text-3xl sm:text-4xl font-normal leading-tight"
-        >
-          Incident Report: {reportData.title || 'Pending Title'}
-        </H1>
-        <p className="mt-4 text-sm text-[#CFCBBF]">
-          Prepared by CustodyBuddy Incident Reporter • {generatedAt}
-        </p>
-      </OutlineCard>
+      <ReviewHeader headingRef={headingRef} title={reportTitle} generatedAt={generatedAt} />
 
       <SummaryPanel
         primaryStat={primaryStat}
         secondaryStats={secondaryStats}
-        severity={reportData.severity}
+        severity={severity}
         severityStyles={severityStyles}
         summaryHtml={summaryHtml}
         summaryRef={summaryRef}
@@ -216,7 +142,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
         onPrint={onPrint}
       />
 
-      <EvidenceList evidence={incidentData.evidence} />
+      <EvidenceSection evidence={incidentData.evidence} />
 
       <LegalReferencesSection
         legalInsightsHtml={legalInsightsHtml}
@@ -226,32 +152,13 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
       />
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <OutlineCard>
-          <H3 className="heading-gold text-xl font-normal">Personal Notes (Private)</H3>
-          <p className="mt-1 text-xs text-[#CFCBBF]/70">
-            These notes remain local to this browser session and are never exported.
-          </p>
-          <textarea
-            ref={notesRef}
-            id="personal-notes"
-            value={personalNotes}
-            onChange={event => setPersonalNotes(event.target.value)}
-            placeholder="Capture follow-up actions, reminders, or attorney questions…"
-            className="mt-4 w-full resize-none rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-[#CFCBBF] outline-none transition focus:border-[#F4E883] focus:ring-4 focus:ring-[#F4E883]/30 placeholder:text-[#CFCBBF]/40"
-            style={{ minHeight: NOTES_MIN_HEIGHT }}
-          />
-        </OutlineCard>
-        <OutlineCard>
-          <H3 className="heading-gold text-xl font-normal">Session Security</H3>
-          <p className="text-sm text-[#CFCBBF]/90">
-            This workspace encrypts data locally and purges it when you reset the incident or close the tab.
-          </p>
-          <ul className="list-disc space-y-2 pl-5 text-sm text-[#CFCBBF]/85">
-            <li>Keep exported files on encrypted or access-controlled drives.</li>
-            <li>Only share reports with counsel or professionals bound by confidentiality.</li>
-            <li>Delete temporary downloads after you deliver them.</li>
-          </ul>
-        </OutlineCard>
+        <PersonalNotesSection
+          notesRef={notesRef}
+          value={personalNotes}
+          onChange={event => setPersonalNotes(event.target.value)}
+          minHeight={NOTES_MIN_HEIGHT}
+        />
+        <SessionSecuritySection />
       </section>
     </div>
   );

@@ -3,11 +3,11 @@ import type { EvidenceFile } from '@/types';
 import H3 from '../../../ui/H3';
 import MetadataBadge from '../../../ui/MetadataBadge';
 
-interface EvidenceListProps {
+interface EvidenceSectionProps {
   evidence: EvidenceFile[];
 }
 
-const EvidenceList: React.FC<EvidenceListProps> = ({ evidence }) => {
+const EvidenceSection: React.FC<EvidenceSectionProps> = ({ evidence }) => {
   const evidenceCount = evidence.length;
   const evidenceLabel = `${evidenceCount} ${evidenceCount === 1 ? 'Item' : 'Items'}`;
 
@@ -65,4 +65,4 @@ const EvidenceList: React.FC<EvidenceListProps> = ({ evidence }) => {
   );
 };
 
-export default EvidenceList;
+export default EvidenceSection;
