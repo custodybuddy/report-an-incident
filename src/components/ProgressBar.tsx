@@ -33,6 +33,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep 
 
         const lineClass = isCompleted ? 'bg-gradient-to-r from-emerald-500 to-green-500' : 'bg-slate-700/50';
 
+        const Icon = step.icon;
+
         return (
           <React.Fragment key={step.number}>
             {index > 0 && <div className={`h-1 flex-1 mx-2 mt-5 rounded-full transition-all duration-700 ${lineClass}`} />}
@@ -42,7 +44,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep 
                 className={`relative flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-500 cursor-pointer ${iconClasses}`}
                 aria-label={`Go to step ${step.number}: ${step.title}`}
               >
-                {isCompleted ? <CheckIcon /> : step.icon}
+                {isCompleted ? <CheckIcon /> : <Icon className="w-5 h-5" />}
               </button>
               <div className="mt-2 text-center max-w-full">
                 <p className={`text-xs font-semibold transition-colors duration-300 ${textClasses} truncate`}>
