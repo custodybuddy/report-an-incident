@@ -5,7 +5,7 @@ import {
   generateCategorization,
   generateLegalInsights,
   generateProfessionalSummary,
-} from '../services/geminiService';
+} from '../services/gemini';
 import { exportReportToHTML, printReport } from '../components/ui/utils/export';
 import { useIncidentState } from './useIncidentState';
 

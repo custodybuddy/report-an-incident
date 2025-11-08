@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { type IncidentData, type IncidentDataUpdater, type EvidenceFile, EVIDENCE_CATEGORIES } from '../../../types';
 import { JURISDICTIONS } from '../../constants';
-import { analyzeEvidence } from '../../services/geminiService';
+import { analyzeEvidence } from '../../services/gemini';
 import { saveEvidenceData, deleteEvidenceData } from '../../services/evidenceStore';
 import H2 from '../ui/H2';
 
