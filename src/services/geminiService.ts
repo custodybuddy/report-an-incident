@@ -3,4 +3,4 @@ export {
   generateCategorization,
   generateLegalInsights,
   generateProfessionalSummary,
-} from "./gemini";
+} from './gemini/index.ts';
