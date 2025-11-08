@@ -15,7 +15,7 @@ const EvidenceSection: React.FC<EvidenceSectionProps> = ({ evidence }) => {
     <section className="rounded-3xl border border-[#F4E883] bg-[#01192C] p-6 shadow-[0_20px_45px_rgba(0,0,0,0.45)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <H3 className="heading-gold text-2xl font-normal">
-          1. Evidence Log{' '}
+          I. Evidence Log{' '}
           <span className="text-sm font-semibold text-[#CFCBBF]/80">({evidenceLabel})</span>
         </H3>
         {evidenceCount > 0 && <MetadataBadge>Maintain secure backups</MetadataBadge>}

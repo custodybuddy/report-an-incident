@@ -24,25 +24,26 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
   caseLawReferences,
   potentialSources,
 }) => {
-  const legalContextNumber = 2;
-  const sourcesNumber = legalContextNumber + 1;
+  const legalContextLabel = 'II';
+  const sourcesLabel = 'III';
 
-  let subsectionCounter = 1;
-  const keyNarrativeNumber = `${legalContextNumber}.${subsectionCounter++}`;
-  const statutesNumber = `${legalContextNumber}.${subsectionCounter++}`;
-  const caseLawNumber =
-    caseLawReferences.length > 0 ? `${legalContextNumber}.${subsectionCounter++}` : null;
-  const glossaryNumber = `${legalContextNumber}.${subsectionCounter++}`;
+  let subsectionCounter = 0;
+  const nextSubsectionLabel = () => String.fromCharCode(65 + subsectionCounter++);
+  const keyNarrativeLabel = `${legalContextLabel}.${nextSubsectionLabel()}`;
+  const statutesLabel = `${legalContextLabel}.${nextSubsectionLabel()}`;
+  const caseLawLabel =
+    caseLawReferences.length > 0 ? `${legalContextLabel}.${nextSubsectionLabel()}` : null;
+  const glossaryLabel = `${legalContextLabel}.${nextSubsectionLabel()}`;
 
   return (
     <section className="space-y-8">
       <H2 className="print-page-break heading-gold text-2xl font-normal mt-10 mb-2 border-l-4 border-[#F4E883] pl-4 tracking-tight">
-        {`${legalContextNumber}. Additional Legal Context`}
+        {`${legalContextLabel}. Additional Legal Context`}
       </H2>
       <OutlineCard className="space-y-8">
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-2 border-b border-[#F4E883]/30 pb-2">
-            <H3 className="heading-gold text-xl font-normal">{`${keyNarrativeNumber} Key Legal Narrative`}</H3>
+            <H3 className="heading-gold text-xl font-normal">{`${keyNarrativeLabel} Key Legal Narrative`}</H3>
             <MetadataBadge variant="subtle">Informational Only</MetadataBadge>
           </div>
           <p className="text-xs font-semibold text-[#F4E883]">
@@ -59,7 +60,7 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
 
         <section className="space-y-4">
           <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
-            {`${statutesNumber} Governing Statutes (The Written Law)`}
+            {`${statutesLabel} Governing Statutes (The Written Law)`}
           </H3>
           {statuteReferences.length > 0 ? (
             <div className="space-y-4 text-[#CFCBBF]">
@@ -83,10 +84,10 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
           )}
         </section>
 
-        {caseLawNumber ? (
+        {caseLawLabel ? (
           <section className="space-y-4">
             <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
-              {`${caseLawNumber} High-Precedent Case Law (Judicial Interpretation)`}
+              {`${caseLawLabel} High-Precedent Case Law (Judicial Interpretation)`}
             </H3>
             <div className="space-y-4 text-[#CFCBBF]">
               {caseLawReferences.map((ref, index) => (
@@ -108,7 +109,7 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
 
         <section className="space-y-3">
           <H3 className="heading-gold text-xl font-normal border-b border-[#F4E883]/30 pb-1">
-            {`${glossaryNumber} Related Legal Concepts / Glossary`}
+            {`${glossaryLabel} Related Legal Concepts / Glossary`}
           </H3>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-3 shadow-inner shadow-black/20">
@@ -128,7 +129,7 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
       </OutlineCard>
 
       <H2 className="heading-gold text-2xl font-normal mt-8 mb-3 border-l-4 border-[#F4E883] pl-4">
-        {`${sourcesNumber}. Potential Legal & Informational Sources`}
+        {`${sourcesLabel}. Potential Legal & Informational Sources`}
       </H2>
       <OutlineCard>
         <ResourceLinkList
