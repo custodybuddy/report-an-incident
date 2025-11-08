@@ -14,8 +14,8 @@ describe('context-specific markdown formatters', () => {
       `<span class="sr-only">(opens in new tab)</span>${DEFAULT_MARKDOWN_ICON}</a>`;
 
     const expected =
-      `<p class="mb-6 last:mb-0">Paragraph with ${expectedLink} and <strong>bold</strong> text.</p>` +
-      '<p class="mb-6 last:mb-0">Next line.</p>';
+      `<p class="mt-0 last:mb-0">Paragraph with ${expectedLink} and <strong>bold</strong> text.</p>` +
+      '<p class="mt-0 last:mb-0">Next line.</p>';
 
     assert.equal(html, expected);
   });
