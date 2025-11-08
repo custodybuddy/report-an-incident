@@ -7,3 +7,15 @@ export interface Step {
   title: string;
   icon: StepIcon;
 }
+
+export interface StatItem {
+  label: string;
+  value: string;
+}
+
+export interface SeverityStyles {
+  card: string;
+  label: string;
+  value: string;
+  accent: string;
+}
