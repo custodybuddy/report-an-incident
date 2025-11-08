@@ -24,7 +24,7 @@ State Management
 src/hooks/useIncidentState.ts encapsulates wizard state, including persisted local storage hydration, validation per step, dirty-state tracking, and evidence cleanup when resetting the flow.
 
 Services & Data Access
-src/services/geminiService.ts wraps Gemini model calls to derive professional summaries, categorize incidents, produce legal insights, and analyze uploaded evidence (with multimodal handling for images and fallbacks for other file types).
+src/services/geminiClient.ts centralizes Gemini API bootstrap, src/services/geminiPrompts/ contains the typed prompt builders and response schemas used across AI workflows, and src/services/evidenceAnalysis.ts focuses on media-specific handling for automated evidence reviews.
 
 src/services/evidenceStore.ts abstracts IndexedDB (with an in-memory fallback) for storing evidence blobs, exposing helpers to save, fetch, and delete records individually or in batches.
 

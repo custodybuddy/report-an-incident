@@ -1,12 +1,12 @@
-export { MODEL_NAME, getClient, tryGetClient } from "./client";
+export { MODEL_NAME, getClient, tryGetClient } from "../geminiClient";
 export {
   buildPromptContext,
-  composePrompt,
-  generateStructuredJson,
   META_PROMPT,
-  sanitizeJsonResponse,
-} from "./promptUtils";
+  buildCategorizationPrompt,
+  buildLegalInsightsPrompt,
+  buildProfessionalSummaryPrompt,
+} from "../geminiPrompts";
+export { generateStructuredJson, sanitizeJsonResponse } from "./promptUtils";
 export { generateProfessionalSummary } from "./professionalSummary";
 export { generateCategorization } from "./categorization";
 export { generateLegalInsights } from "./legalInsights";
-export { analyzeEvidence } from "./evidenceAnalysis";
