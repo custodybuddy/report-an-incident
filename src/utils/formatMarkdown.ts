@@ -43,14 +43,21 @@ const escapeHtml = (value: string): string =>
 const createClassAttribute = (className?: string): string =>
   className && className.trim().length > 0 ? ` class="${className}"` : '';
 
+const resolveOptions = (options?: FormatMarkdownOptions): FormatMarkdownResolvedOptions => ({
+  ...DEFAULT_OPTIONS,
+  ...options,
+});
+
+export type MarkdownFormatter = (
+  input: string | null | undefined,
+  overrides?: FormatMarkdownOptions,
+) => string;
+
 export const formatMarkdown = (
   input: string | null | undefined,
   options?: FormatMarkdownOptions,
 ): string => {
-  const resolved: FormatMarkdownResolvedOptions = {
-    ...DEFAULT_OPTIONS,
-    ...options,
-  };
+  const resolved = resolveOptions(options);
 
   const {
     paragraphClassName,
@@ -107,6 +114,18 @@ export const formatMarkdown = (
     .filter(paragraph => paragraph.length > 0)
     .map(paragraph => `<p${createClassAttribute(paragraphClassName)}>${paragraph}</p>`)
     .join('');
+};
+
+export const createMarkdownFormatter = (
+  defaults?: FormatMarkdownOptions,
+): MarkdownFormatter => {
+  const base = resolveOptions(defaults);
+
+  return (input, overrides) =>
+    formatMarkdown(input, {
+      ...base,
+      ...overrides,
+    });
 };
 
 export const DEFAULT_MARKDOWN_ICON = DEFAULT_EXTERNAL_LINK_ICON;
