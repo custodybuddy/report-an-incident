@@ -1,5 +1,5 @@
 import { type IncidentData, type ReportData } from '@/types';
-import { formatReportContent } from '@/components/ui/utils/markdownParser';
+import { formatMarkdown } from '@/utils/formatMarkdown';
 import {
   compileLegalReferences,
   deriveReadableTitle,
@@ -55,13 +55,13 @@ const escapeHtml = (value: string | null | undefined): string => {
     .replace(/'/g, '&#39;');
 };
 
-const formatRichContent = (content: string | null | undefined, fallback: string): string => {
-  const trimmed = content?.trim();
-  if (!trimmed) {
-    return `<p class="muted">${escapeHtml(fallback)}</p>`;
-  }
-  return formatReportContent(trimmed);
-};
+const formatRichContent = (content: string | null | undefined, fallback: string): string =>
+  formatMarkdown(content, {
+    paragraphClassName: 'mb-4 last:mb-0',
+    linkClassName: 'text-amber-400 hover:underline inline-flex items-center',
+    fallbackText: fallback,
+    fallbackClassName: 'muted',
+  });
 
 const renderStatCard = (label: string, value: string): string => `
   <div class="stat-card">
