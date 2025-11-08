@@ -86,7 +86,7 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
           </div>
           <div
             ref={summaryRef}
-            className="prose prose-invert prose-base mt-6 max-w-none space-y-4 text-[#CFCBBF]"
+            className="prose prose-invert prose-base mt-6 max-w-none text-[#CFCBBF]"
             dangerouslySetInnerHTML={renderHtmlWithFallback(summaryHtml, 'Summary has not been generated yet.')}
           />
         </OutlineCard>
