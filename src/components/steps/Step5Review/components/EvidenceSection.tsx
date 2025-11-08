@@ -1,5 +1,6 @@
 import React from 'react';
 import type { EvidenceFile } from '@/types';
+import { AI_INSIGHT_LABEL } from '@/constants';
 import H3 from '../../../ui/H3';
 import MetadataBadge from '../../../ui/MetadataBadge';
 
@@ -47,7 +48,7 @@ const EvidenceSection: React.FC<EvidenceSectionProps> = ({ evidence }) => {
               </dl>
               {item.aiAnalysis ? (
                 <p className="mt-3 rounded-2xl border border-[#F4E883]/40 bg-[#071B2A] p-3 text-xs text-[#CFCBBF]">
-                  <span className="heading-gold font-normal">AI Insight:</span> {item.aiAnalysis}
+                  <span className="heading-gold font-normal">{AI_INSIGHT_LABEL}</span> {item.aiAnalysis}
                 </p>
               ) : null}
             </article>
