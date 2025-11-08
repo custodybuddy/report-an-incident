@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type IncidentData, type ReportData, type ModalInfo } from '../../../types';
+import { type IncidentData, type ReportData } from '../../../types';
 import { formatReportContent } from '../ui/utils/markdownParser';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
@@ -16,7 +16,6 @@ interface Step5ReviewProps {
   isGeneratingSummary: boolean;
   onExport: () => void;
   onPrint: () => void;
-  setModal: (modal: ModalInfo) => void;
 }
 
 const LOADING_MESSAGES = [
@@ -177,7 +176,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   isGeneratingSummary,
   onExport,
   onPrint,
-  setModal: _setModal,
 }) => {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);

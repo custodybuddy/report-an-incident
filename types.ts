@@ -1,4 +1,4 @@
-import type React from 'react';
+import type { ComponentType, SVGProps } from 'react';
 
 export const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'] as const;
 export type EvidenceCategory = typeof EVIDENCE_CATEGORIES[number];
@@ -43,10 +43,12 @@ export interface ReportData {
   caseNumber?: string;
 }
 
+export type StepIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
 export interface Step {
   number: number;
   title: string;
-  icon: React.ReactElement;
+  icon: StepIcon;
 }
 
 export interface ModalInfo {
