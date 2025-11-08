@@ -297,7 +297,7 @@ main.report-app { max-width: 960px; margin: 0 auto; padding: 0 32px 48px; displa
 
 const renderIntroCard = (reportData: ReportData, generatedAt: string): string => `
   <section class="card intro-card">
-    <p class="eyebrow">AI Generated Report</p>
+    <p class="eyebrow">AI-Generated Report</p>
     <h1 class="title">Incident Report: ${escapeHtml(reportData.title || 'Pending Title')}</h1>
     <p class="meta">Prepared by CustodyBuddy Incident Reporter • ${escapeHtml(generatedAt)}</p>
   </section>
