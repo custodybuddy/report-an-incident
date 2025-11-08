@@ -5,3 +5,5 @@ export const JURISDICTIONS: string[] = ['Ontario, Canada', 'British Columbia, Ca
 
 export const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'] as const;
 export type EvidenceCategory = (typeof EVIDENCE_CATEGORIES)[number];
+
+export const AI_INSIGHT_LABEL = 'AI Insight:';
