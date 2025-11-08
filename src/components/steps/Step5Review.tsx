@@ -5,6 +5,10 @@ import Button from '../ui/Button';
 import H2 from '../ui/H2';
 import H3 from '../ui/H3';
 import H1 from '../ui/H1';
+import OutlineCard from '../ui/OutlineCard';
+import StatCard from '../ui/StatCard';
+import MetadataBadge from '../ui/MetadataBadge';
+import { ResourceLinkCard, ResourceLinkList } from '../ui/ResourceLinks';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -53,37 +57,6 @@ const severityThemes = {
 } as const;
 
 type CopyState = 'idle' | 'copied' | 'error';
-
-const OutlineCard: React.FC<{
-  children: React.ReactNode;
-  borderClassName?: string;
-  backgroundClassName?: string;
-  className?: string;
-}> = ({
-  children,
-  borderClassName = 'border-[#F4E883]',
-  backgroundClassName = 'bg-[#01192C]',
-  className = ''
-}) => (
-  <div
-    className={`rounded-3xl border ${borderClassName} ${backgroundClassName} p-6 shadow-[0_20px_45px_rgba(0,0,0,0.45)] ${className}`}
-  >
-    {children}
-  </div>
-);
-
-const StatCard: React.FC<{ label: string; value: string; accentClassName?: string }> = ({
-  label,
-  value,
-  accentClassName = 'text-[#FFD700]'
-}) => (
-  <div className="rounded-2xl border border-[#F4E883]/60 bg-[#01192C] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
-    <p className={`heading-gold text-xs font-normal uppercase tracking-[0.3em] ${accentClassName}`}>
-      {label}
-    </p>
-    <p className="mt-2 text-lg text-[#CFCBBF]">{value}</p>
-  </div>
-);
 
 const LoadingSpinner: React.FC = () => {
   const [messageIndex, setMessageIndex] = useState(0);
@@ -493,11 +466,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           <H3 className="heading-gold text-2xl font-normal">
             Evidence Log <span className="text-sm font-semibold text-[#CFCBBF]/80">({evidenceLabel})</span>
           </H3>
-          {evidenceCount > 0 && (
-            <span className="rounded-full border border-[#F4E883] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[#F4E883]">
-              Maintain secure backups
-            </span>
-          )}
+          {evidenceCount > 0 && <MetadataBadge>Maintain secure backups</MetadataBadge>}
         </div>
         {evidenceCount > 0 ? (
           <div className="mt-6 space-y-4">
@@ -557,9 +526,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           <section className="space-y-3">
             <div className="flex flex-wrap items-center gap-2 border-b border-[#F4E883]/30 pb-2">
               <H3 className="heading-gold text-xl font-normal">III. Key Legal Narrative</H3>
-              <span className="text-xs font-semibold uppercase tracking-widest text-[#F4E883]">
-                Informational Only
-              </span>
+              <MetadataBadge variant="subtle">Informational Only</MetadataBadge>
             </div>
             <p className="text-xs font-semibold text-[#F4E883]">
               Disclaimer: This is not legal advice. Validate with licensed counsel in your jurisdiction.
@@ -577,25 +544,16 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
             {statuteReferences.length > 0 ? (
               <div className="space-y-4 text-[#CFCBBF]">
                 {statuteReferences.map((ref, index) => (
-                  <div
+                  <ResourceLinkCard
                     key={ref.url}
-                    className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 shadow-lg shadow-black/30"
-                  >
-                    <strong className="heading-gold block text-base font-normal">
-                      {index + 1}. {ref.label}
-                    </strong>
-                    <a
-                      href={ref.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
-                    >
-                      Source URL: {ref.url}
-                    </a>
-                    <p className="text-sm mt-2 text-[#CFCBBF]/90">
-                      {ref.context || 'Reference this authority when documenting how the incident aligns with statutory requirements.'}
-                    </p>
-                  </div>
+                    index={index}
+                    title={ref.label}
+                    url={ref.url}
+                    description={
+                      ref.context ||
+                      'Reference this authority when documenting how the incident aligns with statutory requirements.'
+                    }
+                  />
                 ))}
               </div>
             ) : (
@@ -612,26 +570,17 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
               </H3>
               <div className="space-y-4 text-[#CFCBBF]">
                 {caseLawReferences.map((ref, index) => (
-                  <div
+                  <ResourceLinkCard
                     key={ref.url}
-                    className="rounded-2xl border border-[#F4E883]/40 bg-[#021223] p-4 shadow-lg shadow-black/30"
-                  >
-                    <strong className="heading-gold block text-base font-normal">
-                      {index + 1}. {ref.label || deriveReadableTitle(ref.url)}
-                    </strong>
-                    <p className="text-xs text-[#CFCBBF]/70">Jurisdiction: {getDomainFromUrl(ref.url)}</p>
-                    <a
-                      href={ref.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
-                    >
-                      Citation Link: {ref.url}
-                    </a>
-                    <p className="text-sm mt-2 text-[#CFCBBF]/90">
-                      {ref.context || 'Review this case to understand how courts weigh similar fact patterns.'}
-                    </p>
-                  </div>
+                    index={index}
+                    title={ref.label || deriveReadableTitle(ref.url)}
+                    url={ref.url}
+                    metadata={`Jurisdiction: ${getDomainFromUrl(ref.url)}`}
+                    linkLabel="Citation Link"
+                    description={
+                      ref.context || 'Review this case to understand how courts weigh similar fact patterns.'
+                    }
+                  />
                 ))}
               </div>
             </section>
@@ -664,27 +613,14 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           Potential Legal & Informational Sources
         </H2>
         <OutlineCard>
-          {potentialSources.length > 0 ? (
-            <ul className="list-disc space-y-3 pl-5 text-sm text-[#CFCBBF]">
-              {potentialSources.map(url => (
-                <li key={url} className="space-y-1">
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-[#FFD700] hover:text-[#F4E883] focus-visible:outline-[#F4E883] focus-visible:outline-offset-2"
-                  >
-                    {deriveReadableTitle(url)}
-                  </a>
-                  <p className="text-xs text-[#CFCBBF]/70 italic">{url}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-[#CFCBBF]/80">
-              No supplemental research links were attached for this report.
-            </p>
-          )}
+          <ResourceLinkList
+            items={potentialSources.map(url => ({
+              title: deriveReadableTitle(url),
+              url,
+              description: url,
+            }))}
+            emptyMessage="No supplemental research links were attached for this report."
+          />
         </OutlineCard>
       </section>
 
