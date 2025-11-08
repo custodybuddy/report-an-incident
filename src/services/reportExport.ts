@@ -1,5 +1,5 @@
 import { type IncidentData, type ReportData } from '@/types';
-import { generateReportHTML } from '../../../services/reportFormatter';
+import { generateReportHTML } from './reportFormatter';
 
 export type ReportHelperSuccessType = 'success' | 'info';
 

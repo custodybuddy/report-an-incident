@@ -10,7 +10,7 @@ import {
   exportReportToHTML,
   printReport,
   type ReportHelperResult,
-} from '../components/ui/utils/export';
+} from '../services/reportExport';
 import { useIncidentState } from './useIncidentState';
 
 type ModalRequest = Omit<ModalInfo, 'onClose'> & { onClose?: () => void };

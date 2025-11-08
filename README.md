@@ -29,7 +29,7 @@ src/services/geminiClient.ts centralizes Gemini API bootstrap, src/services/gemi
 src/services/evidenceStore.ts abstracts IndexedDB (with an in-memory fallback) for storing evidence blobs, exposing helpers to save, fetch, and delete records individually or in batches.
 
 Reporting Utilities
-src/components/ui/utils/export.ts composes AI outputs and incident metadata into printable/exportable HTML, presenting styled report sections, evidence logs, and resource lists before launching a new window or print dialog.
+src/services/reportExport.ts composes AI outputs and incident metadata into printable/exportable HTML, presenting styled report sections, evidence logs, and resource lists before launching a new window or print dialog.
 
 Together, these modules deliver a multi-step incident reporting workflow that persists user input, interacts with Gemini for analysis, and generates polished exports.
 
