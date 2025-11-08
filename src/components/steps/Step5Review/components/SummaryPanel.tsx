@@ -1,4 +1,5 @@
 import React, { type RefObject } from 'react';
+import type { ReportHelperSuccessType } from '@/services/reportExport';
 import Button from '../../../ui/Button';
 import H3 from '../../../ui/H3';
 import OutlineCard from '../../../ui/OutlineCard';
@@ -33,6 +34,11 @@ interface SummaryPanelProps {
   onPrint: () => void;
 }
 
+const SHARE_RESULT_HINTS: Record<ReportHelperSuccessType, string> = {
+  success: 'Opens the full report in a new tab so you can export or download it from your browser.',
+  info: "Opens your browser's print dialog so you can print or save a PDF copy of the report.",
+};
+
 const SummaryPanel: React.FC<SummaryPanelProps> = ({
   primaryStat,
   secondaryStats,
@@ -47,6 +53,9 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
   onExport,
   onPrint,
 }) => {
+  const exportAriaLabel = SHARE_RESULT_HINTS.success;
+  const printAriaLabel = SHARE_RESULT_HINTS.info;
+
   const copyButtonClassName =
     copyState === 'copied'
       ? 'bg-[#3AD79B] text-[#011626]'
@@ -118,10 +127,21 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              <Button onClick={onExport} className="justify-center">
+              <Button
+                onClick={onExport}
+                className="justify-center"
+                aria-label={exportAriaLabel}
+                title={exportAriaLabel}
+              >
                 Export HTML Report
               </Button>
-              <Button variant="secondary" onClick={onPrint} className="justify-center">
+              <Button
+                variant="secondary"
+                onClick={onPrint}
+                className="justify-center"
+                aria-label={printAriaLabel}
+                title={printAriaLabel}
+              >
                 Print / Save PDF
               </Button>
             </div>
