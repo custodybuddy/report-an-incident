@@ -1,5 +1,7 @@
 import { type IncidentData, type ReportData } from '@/types';
 import { AI_INSIGHT_LABEL } from '@/constants';
+import { formatGeneratedTimestamp } from '@/utils/dateTime';
+import { formatDisplayIndex } from '@/utils/numberFormatting';
 import { formatSectionContent } from './utils/markdownParser';
 import {
   compileLegalReferences,
@@ -126,8 +128,6 @@ const renderEvidenceItems = (incidentData: IncidentData): string => {
   `;
 };
 
-const formatIndex = (index: number) => String(index + 1).padStart(2, '0');
-
 const renderLegalReferenceCard = (
   label: string,
   url: string,
@@ -136,7 +136,7 @@ const renderLegalReferenceCard = (
   metadata?: string,
 ): string => `
   <article class="resource-card">
-    <h4>${formatIndex(index)}. ${escapeHtml(label)}</h4>
+    <h4>${formatDisplayIndex(index)}. ${escapeHtml(label)}</h4>
     ${metadata ? `<p class="metadata">${escapeHtml(metadata)}</p>` : ''}
     <p>${escapeHtml(description)}</p>
     <p><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open reference</a></p>
@@ -372,10 +372,7 @@ const renderFooter = (): string => `
 `;
 
 export const generateReportHTML = (reportData: ReportData, incidentData: IncidentData): string => {
-  const generatedAt = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date());
+  const generatedAt = formatGeneratedTimestamp();
 
   const severityKey = (reportData.severity || '').toLowerCase();
   const severityTheme = severityThemes[severityKey] ?? severityThemes.default;

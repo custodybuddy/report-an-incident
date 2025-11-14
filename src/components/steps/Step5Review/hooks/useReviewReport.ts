@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
+import { formatGeneratedTimestamp } from '@/utils/dateTime';
 import { useCopyToClipboard } from './useCopyToClipboard';
 import { useLegalReferences } from './useLegalReferences';
 import { buildReviewReportData, type BuildReviewReportDataParams } from './reviewReportData';
@@ -21,14 +22,7 @@ export const useReviewReport = ({
     sources: reportData?.sources ?? [],
   });
 
-  const generatedAt = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(new Date()),
-    []
-  );
+  const generatedAt = useMemo(() => formatGeneratedTimestamp(), []);
 
   const getSummaryText = useCallback(
     () => summaryRef.current?.innerText?.trim() ?? reportData?.professionalSummary?.trim() ?? '',

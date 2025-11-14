@@ -11,6 +11,23 @@ import type {
 
 type AsyncMock = ReturnType<typeof mock.fn>;
 
+type HookDispatcher = {
+  useState: typeof React.useState;
+  useEffect: typeof React.useEffect;
+  useCallback: typeof React.useCallback;
+};
+
+type ReactWithInternals = typeof React & {
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?: {
+    H: HookDispatcher;
+  };
+};
+
+type GlobalWithDom = typeof globalThis & {
+  FileReader?: typeof FileReader;
+  File?: typeof File;
+};
+
 let persistenceServiceMock: EvidencePersistenceService;
 let analysisServiceMock: EvidenceAnalysisService;
 let idServiceMock: EvidenceIdService;
@@ -122,14 +139,14 @@ const createHookRenderer = <TProps, TReturn>(
       }
     };
 
-    const internals = (React as any)
+    const internals = (React as ReactWithInternals)
       .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     if (!internals) {
       throw new Error('React internals unavailable in test environment.');
     }
 
     const previousDispatcher = internals.H;
-    internals.H = dispatcher;
+    internals.H = dispatcher as unknown as HookDispatcher;
 
     try {
       currentResult = hook(props);
@@ -169,7 +186,8 @@ const createFileReader = (base64 = 'mock-base64') => {
     }
   }
 
-  (globalThis as any).FileReader = MockFileReader;
+  const globalScope = globalThis as GlobalWithDom;
+  globalScope.FileReader = MockFileReader as unknown as typeof FileReader;
 };
 
 const ensureFileGlobal = () => {
@@ -184,7 +202,8 @@ const ensureFileGlobal = () => {
         this.lastModified = options?.lastModified ?? Date.now();
       }
     }
-    (globalThis as any).File = PolyfillFile;
+    const globalScope = globalThis as GlobalWithDom;
+    globalScope.File = PolyfillFile as unknown as typeof File;
   }
 };
 
@@ -256,9 +275,9 @@ describe('useEvidenceManager', () => {
   test('handles file upload and completes successful analysis', async () => {
     saveEvidenceDataMock.mock.mockImplementation(async () => undefined);
     let resolveAnalysis: ((value: string) => void) | null = null;
-    analyzeEvidenceMock.mock.mockImplementation((() => new Promise(resolve => {
+    analyzeEvidenceMock.mock.mockImplementation(() => new Promise<string>(resolve => {
       resolveAnalysis = resolve;
-    })) as any);
+    }));
 
     const incident = buildIncident();
     const { renderer, getIncident } = setupHook(incident);
@@ -289,7 +308,7 @@ describe('useEvidenceManager', () => {
 
   test('handles analysis failure and provides fallback message', async () => {
     saveEvidenceDataMock.mock.mockImplementation(async () => undefined);
-    analyzeEvidenceMock.mock.mockImplementation((() => Promise.reject(new Error('failure'))) as any);
+    analyzeEvidenceMock.mock.mockImplementation(() => Promise.reject(new Error('failure')));
 
     const incident = buildIncident();
     const { renderer, getIncident } = setupHook(incident);
@@ -309,9 +328,9 @@ describe('useEvidenceManager', () => {
   test('removes evidence and clears tracking state', async () => {
     saveEvidenceDataMock.mock.mockImplementation(async () => undefined);
     let resolveAnalysis: (() => void) | null = null;
-    analyzeEvidenceMock.mock.mockImplementation((() => new Promise(resolve => {
-      resolveAnalysis = resolve as () => void;
-    })) as any);
+    analyzeEvidenceMock.mock.mockImplementation(() => new Promise<void>(resolve => {
+      resolveAnalysis = resolve;
+    }));
 
     const incident = buildIncident();
     const { renderer, getIncident } = setupHook(incident);

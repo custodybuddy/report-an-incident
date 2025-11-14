@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '@/types';
-import { PREDEFINED_PARTIES, PREDEFINED_CHILDREN } from '../../constants';
+import { PREDEFINED_PARTIES, PREDEFINED_CHILDREN } from '@/constants';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import Button from '../ui/Button';
 import H1 from '../ui/H1';

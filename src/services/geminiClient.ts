@@ -1,11 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
+type EnvRecord = Record<string, string | undefined>;
+
+const resolveViteEnv = (): EnvRecord => {
+  if (typeof import.meta !== "undefined" && typeof import.meta.env !== "undefined") {
+    return import.meta.env as EnvRecord;
+  }
+  return {};
+};
+
 const resolveApiKey = (): string | undefined => {
-  const viteEnv =
-    typeof import.meta !== "undefined" && (import.meta as any)?.env
-      ? ((import.meta as any).env as Record<string, string | undefined>)
-      : {};
-  const { VITE_GEMINI_API_KEY, VITE_API_KEY } = viteEnv;
+  const { VITE_GEMINI_API_KEY, VITE_API_KEY } = resolveViteEnv();
   const key =
     VITE_GEMINI_API_KEY ||
     VITE_API_KEY ||

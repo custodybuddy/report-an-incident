@@ -80,8 +80,8 @@ export const getEvidenceData = async (id: string): Promise<string | undefined> =
     return memoryStore.get(id);
   }
 
-  const record = await runTransaction<any>('readonly', store => store.get(id));
-  if (record && typeof record.data === 'string') {
+  const record = await runTransaction<EvidenceRecord | undefined>('readonly', store => store.get(id));
+  if (record?.data) {
     return record.data;
   }
   return undefined;

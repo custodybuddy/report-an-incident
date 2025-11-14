@@ -1,7 +1,7 @@
 import React from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '@/types';
 import { EVIDENCE_CATEGORIES } from '@/constants';
-import { JURISDICTIONS } from '../../constants';
+import { JURISDICTIONS } from '@/constants';
 import H2 from '../ui/H2';
 import { useEvidenceManager } from '../../hooks/useEvidenceManager';
 
