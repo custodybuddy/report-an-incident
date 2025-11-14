@@ -175,7 +175,7 @@ const renderCaseLawSection = (
 
   return `
     <section>
-      <h3>V. High-Precedent Case Law (Judicial Interpretation)</h3>
+      <h3>High-Precedent Case Law (Judicial Interpretation)</h3>
       <div class="resource-list">
         ${caseLawReferences
           .map((ref, index) =>
@@ -355,23 +355,23 @@ const renderLegalContextSection = (
   caseLawReferences: ReturnType<typeof compileLegalReferences>['caseLawReferences'],
 ): string => `
   <section class="page-break">
-    <h2 class="section-title">II. Additional Legal Context</h2>
+    <h2 class="section-title">Additional Legal Context</h2>
     <article class="legal-card">
       <section>
         <div class="section-heading">
-          <h3>III. Key Legal Narrative</h3>
+          <h3>Key Legal Narrative</h3>
           <span class="badge">Informational Only</span>
         </div>
         <p class="note">Disclaimer: This is not legal advice. Validate with licensed counsel in your jurisdiction.</p>
         <div class="prose">${legalInsightsHtml}</div>
       </section>
       <section>
-        <h3>IV. Governing Statutes (The Written Law)</h3>
+        <h3>Governing Statutes (The Written Law)</h3>
         ${renderStatuteSection(statuteReferences)}
       </section>
       ${renderCaseLawSection(caseLawReferences)}
       <section>
-        <h3>VI. Related Legal Concepts / Glossary</h3>
+        <h3>Related Legal Concepts / Glossary</h3>
         ${renderGlossary()}
       </section>
     </article>

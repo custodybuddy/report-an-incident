@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
               />
             </div>
             <div>
-              <H1 className="!text-left text-xl sm:text-2xl font-black tracking-tight text-[#FFD700]">
+              <H1 className="!text-left text-lg sm:text-xl font-black tracking-tight text-[#FFD700]">
                 Report An Incident:{' '}
                 <span className="text-white font-raleway font-medium">Catch Them&nbsp;Red-Handed.</span>
               </H1>

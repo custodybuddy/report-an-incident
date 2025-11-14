@@ -25,7 +25,7 @@ Plain English Summary: "In simple terms, this statute establishes/defines/mandat
 Source URL: [Provide direct URL from browsing tool]
 Plain English Summary: "In simple terms, this statute addresses..."
 
-II. HIGH-PRECEDENT CASE LAW
+HIGH-PRECEDENT CASE LAW
 Purpose: These cases interpret the statutes above and set binding legal precedent for lower courts in the jurisdiction.
 
 [Case Name and Full Citation, e.g., Smith v. Jones, 123 Cal. App. 4th 567 (2020)]
@@ -36,7 +36,7 @@ Holding Summary: "The court's decision (holding) in this case established the le
 Jurisdictional Level: [e.g., State Supreme Court, Appellate Court, etc.]
 Holding Summary: "The court further clarified/modified the law by ruling that..."
 
-III. RELATED LEGAL CONCEPTS / GLOSSARY
+RELATED LEGAL CONCEPTS / GLOSSARY
 Purpose: Definitions of key legal terms relevant to the findings.
 
 [Term 1, e.g., 'Best Interests of the Child']: [Provide a concise legal definition.]
