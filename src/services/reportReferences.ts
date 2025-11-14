@@ -87,7 +87,6 @@ export interface LegalReferencesOptions {
 export interface LegalReferencesResult {
   statuteReferences: LegalReference[];
   caseLawReferences: LegalReference[];
-  potentialSources: string[];
 }
 
 export const compileLegalReferences = ({
@@ -101,13 +100,10 @@ export const compileLegalReferences = ({
 
   const statuteRefs: LegalReference[] = [];
   const caseLawRefs: LegalReference[] = [];
-  const infoSources: string[] = [];
-
   sources.forEach(url => {
     if (isCaseLawSource(url)) {
       caseLawRefs.push(referenceMap.get(url) ?? { label: deriveReadableTitle(url), url });
     } else {
-      infoSources.push(url);
       if (!referenceMap.has(url) && inlineReferences.length > 0) {
         statuteRefs.push({ label: deriveReadableTitle(url), url });
       }
@@ -126,6 +122,5 @@ export const compileLegalReferences = ({
   return {
     statuteReferences: statuteRefs,
     caseLawReferences: caseLawRefs,
-    potentialSources: infoSources,
   };
 };

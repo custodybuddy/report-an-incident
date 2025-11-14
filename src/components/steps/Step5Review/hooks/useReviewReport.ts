@@ -16,7 +16,7 @@ export const useReviewReport = ({
     [incidentData, reportData]
   );
 
-  const { statuteReferences, caseLawReferences, potentialSources } = useLegalReferences({
+  const { statuteReferences, caseLawReferences } = useLegalReferences({
     legalInsights: reportData?.legalInsights,
     sources: reportData?.sources ?? [],
   });
@@ -43,7 +43,6 @@ export const useReviewReport = ({
     summaryRef,
     statuteReferences,
     caseLawReferences,
-    potentialSources,
     copyState,
     handleCopy,
     buttonLabel,

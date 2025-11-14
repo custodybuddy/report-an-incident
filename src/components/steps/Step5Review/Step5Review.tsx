@@ -5,7 +5,6 @@ import SummaryPanel from './components/SummaryPanel';
 import LegalReferencesSection from './components/LegalReferencesSection';
 import EvidenceSection from './components/EvidenceSection';
 import ReviewHeader from './components/ReviewHeader';
-import PersonalNotesSection from './components/PersonalNotesSection';
 import SessionSecuritySection from './components/SessionSecuritySection';
 import { useReviewReport } from './hooks/useReviewReport';
 
@@ -24,8 +23,6 @@ const LOADING_MESSAGES = [
   'Compiling the professional summary...',
   'Finalizing the report structure...',
 ];
-
-const NOTES_MIN_HEIGHT = 220;
 
 const LoadingSpinner: React.FC = () => {
   const [messageIndex, setMessageIndex] = useState(0);
@@ -74,8 +71,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   onPrint,
 }) => {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const notesRef = useRef<HTMLTextAreaElement>(null);
-  const [personalNotes, setPersonalNotes] = useState('');
 
   const {
     hasReport,
@@ -94,7 +89,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     legalInsightsHtml,
     statuteReferences,
     caseLawReferences,
-    potentialSources,
   } = useReviewReport({ incidentData, reportData });
 
   useEffect(() => {
@@ -102,14 +96,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
       headingRef.current.focus({ preventScroll: true });
     }
   }, [hasReport, isGeneratingSummary]);
-
-  useEffect(() => {
-    const textarea = notesRef.current;
-    if (!textarea) return;
-
-    textarea.style.height = 'auto';
-    textarea.style.height = `${Math.max(textarea.scrollHeight, NOTES_MIN_HEIGHT)}px`;
-  }, [personalNotes]);
 
   if (isGeneratingSummary) {
     return <LoadingSpinner />;
@@ -148,18 +134,9 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
         legalInsightsHtml={legalInsightsHtml}
         statuteReferences={statuteReferences}
         caseLawReferences={caseLawReferences}
-        potentialSources={potentialSources}
       />
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <PersonalNotesSection
-          notesRef={notesRef}
-          value={personalNotes}
-          onChange={event => setPersonalNotes(event.target.value)}
-          minHeight={NOTES_MIN_HEIGHT}
-        />
-        <SessionSecuritySection />
-      </section>
+      <SessionSecuritySection />
     </div>
   );
 };

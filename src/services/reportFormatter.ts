@@ -193,41 +193,6 @@ const renderCaseLawSection = (
   `;
 };
 
-const renderPotentialSources = (potentialSources: string[]): string => {
-  if (potentialSources.length === 0) {
-    return '<p class="muted">No supplemental research links were attached for this report.</p>';
-  }
-
-  return `
-    <div class="resource-list">
-      ${potentialSources
-        .map((url, index) =>
-          renderLegalReferenceCard(
-            deriveReadableTitle(url),
-            url,
-            url,
-            index,
-            getDomainFromUrl(url),
-          ),
-        )
-        .join('')}
-    </div>
-  `;
-};
-
-const renderGlossary = (): string => `
-  <div class="glossary">
-    <article class="resource-card">
-      <h4>Document Preservation</h4>
-      <p>Keep certified copies of every exhibit (screenshots, emails, call logs) with timestamps for court submission.</p>
-    </article>
-    <article class="resource-card">
-      <h4>Best Interests Analysis</h4>
-      <p>Courts prioritize child safety, stability, and continuity of care when reviewing co-parenting disputes.</p>
-    </article>
-  </div>
-`;
-
 const STYLES = `
 :root { color-scheme: dark; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
 * { box-sizing: border-box; }
@@ -235,10 +200,16 @@ body { margin: 0; background: #010b18; color: #CFCBBF; line-height: 1.6; font-fa
 a { color: inherit; }
 main.report-app { max-width: 960px; margin: 0 auto; padding: 0 32px 48px; display: flex; flex-direction: column; gap: 32px; }
 .card { border-radius: 24px; border: 1px solid rgba(244,232,131,0.25); background: linear-gradient(145deg, rgba(1,18,35,0.95), rgba(1,25,44,0.88)); padding: 28px; box-shadow: 0 20px 55px rgba(0,0,0,0.45); }
-.intro-card { background: linear-gradient(160deg, rgba(2,18,35,0.92), rgba(9,26,43,0.85)); border: 1px solid rgba(244,232,131,0.35); }
-.eyebrow { margin: 0; text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.75rem; color: #F4E883; font-weight: 600; }
-.title { margin: 12px 0 0; font-size: 2.4rem; line-height: 1.15; color: #F4E883; font-weight: 500; }
-.meta { margin-top: 0.75rem; font-size: 0.95rem; color: rgba(207,203,191,0.85); }
+.intro-card { padding: 32px; background: rgba(2,10,20,0.9); border: 1px solid rgba(244,232,131,0.25); box-shadow: 0 30px 65px rgba(0,0,0,0.45); gap: 20px; display: flex; flex-direction: column; }
+.eyebrow { margin: 0; display: flex; align-items: center; gap: 12px; text-transform: uppercase; letter-spacing: 0.45em; font-size: 0.6rem; color: rgba(244,232,131,0.75); font-weight: 600; }
+.eyebrow::before, .eyebrow::after { content: ''; flex: 1; height: 1px; background: rgba(244,232,131,0.25); }
+.intro-heading { display: flex; flex-direction: column; gap: 6px; }
+.subtitle { margin: 0; text-transform: uppercase; letter-spacing: 0.35em; font-size: 0.7rem; color: rgba(244,232,131,0.6); }
+.title { margin: 0; font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1.1; color: #FDF5C5; font-weight: 600; }
+.intro-meta { display: flex; flex-wrap: wrap; gap: 20px 48px; margin: 8px 0 0; }
+.intro-meta dt { font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(244,232,131,0.55); margin-bottom: 6px; }
+.intro-meta dd { margin: 0; font-size: 0.95rem; color: #FDF5C5; }
+.meta { margin-top: 0.75rem; font-size: 0.9rem; color: rgba(207,203,191,0.8); }
 .stats-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .stat-card { border-radius: 20px; padding: 20px; border: 1px solid rgba(244,232,131,0.35); background: rgba(2,18,35,0.85); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
 .stat-card .label { margin: 0; font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(244,232,131,0.75); font-weight: 600; }
@@ -248,6 +219,13 @@ main.report-app { max-width: 960px; margin: 0 auto; padding: 0 32px 48px; displa
 .section-heading { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid rgba(244,232,131,0.25); padding-bottom: 12px; }
 .section-heading h2, .section-heading h3 { margin: 0; font-size: 1.6rem; color: #F4E883; font-weight: 500; }
 .section-heading .caption { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.25em; color: rgba(244,232,131,0.8); }
+.summary-card { background: rgba(3,12,24,0.92); border-color: rgba(244,232,131,0.3); padding: 32px; }
+.summary-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.summary-header .summary-label { margin: 0; font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(244,232,131,0.75); font-weight: 600; }
+.summary-header .summary-title { margin: 6px 0 0; font-size: clamp(1.6rem, 2.4vw, 2.4rem); color: #FDF5C5; font-weight: 600; }
+.summary-copy { margin-top: 20px; font-size: 0.95rem; color: #CFCBBF; line-height: 1.9; }
+.summary-copy p { margin: 0 0 1.6rem; }
+.summary-copy p:last-child { margin-bottom: 0; }
 .prose { margin-top: 18px; font-size: 0.95rem; color: #CFCBBF; }
 .prose p { margin: 0 0 1rem 0; color: inherit; }
 .prose p:last-child { margin-bottom: 0; }
@@ -277,7 +255,6 @@ main.report-app { max-width: 960px; margin: 0 auto; padding: 0 32px 48px; displa
 .resource-card p { margin: 8px 0 0; color: #CFCBBF; font-size: 0.9rem; }
 .resource-card a { color: #F4E883; font-weight: 600; text-decoration: none; }
 .resource-card a:hover { text-decoration: underline; }
-.glossary { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .footer { text-align: center; font-size: 0.75rem; color: rgba(207,203,191,0.6); border-top: 1px dashed rgba(244,232,131,0.35); padding-top: 12px; margin-top: 32px; }
 .page-break { page-break-before: always; margin-top: 40px; }
 @media print { body { background: #fff; color: #1a1a1a; padding: 0; } main.report-app { padding: 0 20px 20px; gap: 24px; } .card, .stat-card, .resource-card, .evidence-card { box-shadow: none; background: #fff; color: #1a1a1a; border-color: #d6d6d6; } .intro-card { background: #fff; } .title { color: #111; } .eyebrow { color: #333; } .meta, .muted { color: #444; } .badge { border-color: #555; background: transparent; color: #333; } .resource-card h4, .section-heading h2, .section-heading h3, .legal-card h3 { color: #111; } .legal-card { background: #fff; } .page-break { page-break-before: always; } }
@@ -300,10 +277,22 @@ main.report-app { max-width: 960px; margin: 0 auto; padding: 0 32px 48px; displa
 `;
 
 const renderIntroCard = (reportData: ReportData, generatedAt: string): string => `
-  <section class="card intro-card">
+  <section class="card intro-card" aria-labelledby="report-title">
     <p class="eyebrow">AI-Generated Report</p>
-    <h1 class="title">Incident Report: ${escapeHtml(reportData.title || 'Pending Title')}</h1>
-    <p class="meta">Prepared by CustodyBuddy Incident Reporter • ${escapeHtml(generatedAt)}</p>
+    <div class="intro-heading">
+      <p class="subtitle">Incident Report</p>
+      <h1 id="report-title" class="title">${escapeHtml(reportData.title || 'Pending Title')}</h1>
+    </div>
+    <dl class="intro-meta">
+      <div>
+        <dt>Prepared By</dt>
+        <dd>CustodyBuddy Incident Reporter</dd>
+      </div>
+      <div>
+        <dt>Generated</dt>
+        <dd>${escapeHtml(generatedAt)}</dd>
+      </div>
+    </dl>
   </section>
 `;
 
@@ -314,12 +303,14 @@ const renderSummarySection = (
   theme: SeverityTheme,
 ): string => `
   <section class="summary-layout">
-    <article class="card">
-      <div class="section-heading">
-        <span class="caption">Professional Summary</span>
-        <h2>Review The Narrative</h2>
+    <article class="card summary-card">
+      <div class="summary-header">
+        <div>
+          <p class="summary-label">Professional Summary</p>
+          <h2 class="summary-title">Review The Narrative</h2>
+        </div>
       </div>
-      <div class="prose">${summaryHtml}</div>
+      <div class="prose summary-copy">${summaryHtml}</div>
     </article>
     <article
       class="card"
@@ -370,19 +361,6 @@ const renderLegalContextSection = (
         ${renderStatuteSection(statuteReferences)}
       </section>
       ${renderCaseLawSection(caseLawReferences)}
-      <section>
-        <h3>Related Legal Concepts / Glossary</h3>
-        ${renderGlossary()}
-      </section>
-    </article>
-  </section>
-`;
-
-const renderPotentialSourcesSection = (potentialSources: string[]): string => `
-  <section>
-    <h2 class="section-title">Potential Legal &amp; Informational Sources</h2>
-    <article class="card">
-      ${renderPotentialSources(potentialSources)}
     </article>
   </section>
 `;
@@ -415,7 +393,7 @@ export const generateReportHTML = (reportData: ReportData, incidentData: Inciden
     { fallbackText: 'No legal insights were generated.' },
   );
 
-  const { statuteReferences, caseLawReferences, potentialSources } = compileLegalReferences({
+  const { statuteReferences, caseLawReferences } = compileLegalReferences({
     legalInsights: reportData.legalInsights,
     sources: reportData.sources ?? [],
   });
@@ -442,7 +420,6 @@ export const generateReportHTML = (reportData: ReportData, incidentData: Inciden
       ${renderSummarySection(reportData, summaryHtml, severityJustificationHtml, severityTheme)}
       ${renderEvidenceSection(incidentData)}
       ${renderLegalContextSection(legalInsightsHtml, statuteReferences, caseLawReferences)}
-      ${renderPotentialSourcesSection(potentialSources)}
       ${renderFooter()}
     </main>
   </body>

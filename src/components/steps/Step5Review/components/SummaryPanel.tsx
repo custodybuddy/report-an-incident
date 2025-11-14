@@ -70,23 +70,33 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
       </section>
 
       <section className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-        <OutlineCard>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#F4E883]">Professional Summary</p>
-              <H3 className="heading-gold text-2xl font-normal tracking-tight">Review The Narrative</H3>
+        <OutlineCard
+          borderClassName="border-white/10"
+          backgroundClassName="bg-gradient-to-br from-[#050e1a]/90 via-[#050e1a]/70 to-[#041120]/80"
+          className="space-y-6 sm:p-8"
+        >
+          <header className="flex flex-wrap items-center gap-4">
+            <div className="space-y-2">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.35em] text-[#F4E883]/70">
+                Professional Summary
+              </p>
+              <H3 className="heading-gold text-[clamp(1.5rem,2.2vw,2.15rem)] font-semibold tracking-tight">
+                Review The Narrative
+              </H3>
             </div>
-            <button
-              type="button"
-              onClick={onCopySummary}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:outline-[#F4E883] focus-visible:outline-offset-2 ${copyButtonClassName}`}
-            >
-              {summaryButtonLabel}
-            </button>
-          </div>
+            <div className="flex w-full justify-start sm:w-auto sm:flex-1 sm:justify-end">
+              <button
+                type="button"
+                onClick={onCopySummary}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition focus-visible:outline-[#F4E883] focus-visible:outline-offset-2 ${copyButtonClassName}`}
+              >
+                {summaryButtonLabel}
+              </button>
+            </div>
+          </header>
           <div
             ref={summaryRef}
-            className="prose prose-invert prose-base mt-6 max-w-none text-[#CFCBBF]"
+            className="prose prose-invert prose-base max-w-none text-[#CFCBBF] [&_p]:leading-8 [&_p]:mt-6 [&_p:first-child]:mt-0"
             dangerouslySetInnerHTML={renderHtmlWithFallback(summaryHtml, 'Summary has not been generated yet.')}
           />
         </OutlineCard>
