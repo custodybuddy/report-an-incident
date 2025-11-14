@@ -46,23 +46,33 @@ const LegalReferencesSection: React.FC<LegalReferencesSectionProps> = ({
       </header>
 
       <OutlineCard className="divide-y divide-white/10 bg-gradient-to-br from-[#021223] via-[#03182d] to-[#071b2a] p-6 sm:p-8">
-        <article className={`space-y-3 ${sectionBodyClasses}`} aria-labelledby={narrativeHeadingId}>
-          <header className="flex flex-wrap items-center gap-2 border-b border-[#F4E883]/30 pb-2">
-            <H3 id={narrativeHeadingId} className="heading-gold text-xl font-normal">
-              Key Legal Narrative
-            </H3>
-            <MetadataBadge variant="subtle">Informational Only</MetadataBadge>
+        <article className={`space-y-4 ${sectionBodyClasses}`} aria-labelledby={narrativeHeadingId}>
+          <header className="space-y-1 border-b border-[#F4E883]/30 pb-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <H3 id={narrativeHeadingId} className="heading-gold text-xl font-normal">
+                Key Legal Narrative
+              </H3>
+              <MetadataBadge variant="subtle">Informational Only</MetadataBadge>
+            </div>
+            <p className="text-xs text-[#CFCBBF]/80">
+              A structured summary of how the facts align (or conflict) with the cited legal standards.
+            </p>
           </header>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#F4E883]/80">
-            Disclaimer: This is not legal advice. Validate with licensed counsel in your jurisdiction.
-          </p>
-          <div
-            className="prose prose-invert prose-sm max-w-none text-[#CFCBBF]"
-            dangerouslySetInnerHTML={renderHtmlWithFallback(
-              legalInsightsHtml,
-              'No legal insights were generated.'
-            )}
-          />
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 bg-gradient-to-br from-white/5 to-transparent p-4 sm:p-5 shadow-inner">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#F4E883]/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-[#F4E883]">
+              <span className="inline-block h-2 w-2 rounded-full bg-[#F4E883]" aria-hidden="true" />
+              Not Legal Advice — confirm with counsel
+            </p>
+            <div
+              className="prose prose-invert prose-sm max-w-none text-[#E6E1D2] prose-headings:text-white prose-strong:text-white/90 prose-li:marker:text-[#F4E883]"
+              aria-live="polite"
+              dangerouslySetInnerHTML={renderHtmlWithFallback(
+                legalInsightsHtml,
+                'No legal insights were generated.'
+              )}
+            />
+          </div>
         </article>
 
         <article className={`text-[#CFCBBF] ${sectionBodyClasses}`} aria-labelledby={statutesHeadingId}>
