@@ -28,7 +28,26 @@ export interface ReportResult {
   sources: string[];
   observedImpact: string;
   communicationDraft?: string;
-  rawResponse?: string;
+  promptContext?: string;
+  aiResponses?: {
+    summary?: {
+      title: string;
+      professionalSummary: string;
+    };
+    categorization?: {
+      category: string;
+      severity: string;
+      severityJustification: string;
+    };
+    legal?: {
+      legalInsights: string;
+      sources: string[];
+    };
+    nextSteps?: {
+      observedImpact: string;
+    };
+    communicationDraft?: string;
+  };
 }
 
 export const createInitialIncident = (): IncidentData => ({

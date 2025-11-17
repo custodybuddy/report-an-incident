@@ -69,6 +69,13 @@ export const generateIncidentReport = async (incident: IncidentData): Promise<Re
     sources: legal.sources,
     observedImpact: nextSteps.observedImpact,
     communicationDraft,
-    rawResponse: buildPromptContext(incident),
+    promptContext: buildPromptContext(incident),
+    aiResponses: {
+      summary,
+      categorization,
+      legal,
+      nextSteps,
+      communicationDraft,
+    },
   };
 };
