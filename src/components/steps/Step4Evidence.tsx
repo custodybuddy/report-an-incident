@@ -1,75 +1,8 @@
 import React from 'react';
-import H2 from '../ui/H2';
+import { EVIDENCE_CATEGORIES, JURISDICTIONS } from '../../config/evidence';
+import useEvidenceList from '../../hooks/useEvidenceList';
 import type { EvidenceItem } from '../../types';
-
-const JURISDICTIONS = [
-  'Alabama',
-  'Alaska',
-  'Arizona',
-  'Arkansas',
-  'California',
-  'Colorado',
-  'Connecticut',
-  'Delaware',
-  'District of Columbia',
-  'Florida',
-  'Georgia',
-  'Hawaii',
-  'Idaho',
-  'Illinois',
-  'Indiana',
-  'Iowa',
-  'Kansas',
-  'Kentucky',
-  'Louisiana',
-  'Maine',
-  'Maryland',
-  'Massachusetts',
-  'Michigan',
-  'Minnesota',
-  'Mississippi',
-  'Missouri',
-  'Montana',
-  'Nebraska',
-  'Nevada',
-  'New Hampshire',
-  'New Jersey',
-  'New Mexico',
-  'New York',
-  'North Carolina',
-  'North Dakota',
-  'Ohio',
-  'Oklahoma',
-  'Oregon',
-  'Pennsylvania',
-  'Rhode Island',
-  'South Carolina',
-  'South Dakota',
-  'Tennessee',
-  'Texas',
-  'Utah',
-  'Vermont',
-  'Virginia',
-  'Washington',
-  'West Virginia',
-  'Wisconsin',
-  'Wyoming',
-  'Alberta',
-  'British Columbia',
-  'Manitoba',
-  'New Brunswick',
-  'Newfoundland and Labrador',
-  'Northwest Territories',
-  'Nova Scotia',
-  'Nunavut',
-  'Ontario',
-  'Prince Edward Island',
-  'Quebec',
-  'Saskatchewan',
-  'Yukon',
-];
-
-const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'];
+import H2 from '../ui/H2';
 
 interface Step4EvidenceProps {
   jurisdiction: string;
@@ -88,32 +21,10 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
   onCaseNumberChange,
   onEvidenceChange,
 }) => {
-  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = event => {
-    const files = Array.from(event.target.files ?? []);
-    if (!files.length) {
-      return;
-    }
-
-    onEvidenceChange([
-      ...evidence,
-      ...files.map((file, index) => ({
-        id: `${file.name}-${Date.now()}-${index}`,
-        name: file.name,
-        size: file.size,
-        category: EVIDENCE_CATEGORIES[0],
-        description: '',
-      })),
-    ]);
-    event.target.value = '';
-  };
-
-  const updateEvidenceItem = (id: string, key: 'category' | 'description', value: string) => {
-    onEvidenceChange(evidence.map(item => (item.id === id ? { ...item, [key]: value } : item)));
-  };
-
-  const removeEvidenceItem = (id: string) => {
-    onEvidenceChange(evidence.filter(item => item.id !== id));
-  };
+  const { handleFileChange, removeEvidenceItem, updateEvidenceItem } = useEvidenceList({
+    evidence,
+    onEvidenceChange,
+  });
 
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
