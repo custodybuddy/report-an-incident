@@ -1,12 +1,13 @@
 import React from 'react';
+import { SITE_LINKS } from '../config/links';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const links = [
-    { name: 'Privacy Policy', url: 'https://custodybuddy.com/incident-report/privacy-policy/' },
-    { name: 'Terms of Service', url: 'https://custodybuddy.com/incident-report/terms-of-use/' },
-    { name: 'Legal Disclaimer', url: 'https://custodybuddy.com/incident-report/legal-disclaimer/' },
-    { name: 'Contact Us', url: 'https://custodybuddy.com/contact' }
+    { name: 'Privacy Policy', url: SITE_LINKS.privacy },
+    { name: 'Terms of Service', url: SITE_LINKS.terms },
+    { name: 'Legal Disclaimer', url: SITE_LINKS.disclaimer },
+    { name: 'Contact Us', url: SITE_LINKS.contact }
   ];
 
   return (
