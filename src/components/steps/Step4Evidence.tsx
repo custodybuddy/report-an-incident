@@ -49,7 +49,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
               id="jurisdiction-select"
               value={jurisdiction}
               onChange={event => onJurisdictionChange(event.target.value)}
-              className="w-full appearance-none bg-slate-800/50 border-2 border-slate-600 rounded-xl px-4 py-3 text-slate-200 transition-all duration-300 focus:ring-4 focus:ring-amber-400/30 focus:border-amber-400 hover:border-amber-500"
+              className="w-full appearance-none bg-slate-800/50 border-2 border-slate-600 rounded-xl px-4 py-3 text-slate-200 transition-all duration-300 focus-visible:ring-4 focus-visible:ring-amber-300/60 focus-visible:border-amber-300 hover:border-amber-500"
             >
               <option value="">Select a jurisdiction...</option>
               {JURISDICTIONS.map(name => (
@@ -72,14 +72,14 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
               value={caseNumber}
               onChange={event => onCaseNumberChange(event.target.value)}
               placeholder="e.g., F-12345-67"
-              className="w-full p-3 bg-slate-800/50 border-2 rounded-xl transition-all duration-300 shadow-sm text-slate-200 border-slate-600 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/30 hover:border-amber-500"
+              className="w-full p-3 bg-slate-800/50 border-2 rounded-xl transition-all duration-300 shadow-sm text-slate-200 border-slate-600 focus-visible:border-amber-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/60 hover:border-amber-500"
             />
           </div>
         </div>
 
         <div>
           <h3 className="text-lg font-bold text-slate-100 mb-4">Evidence Locker</h3>
-          <div className="bg-black/20 rounded-xl p-6 border border-slate-700">
+          <div className="bg-black/20 rounded-2xl p-6 border border-slate-700 shadow-xl shadow-amber-500/10 space-y-6">
             <div className="space-y-4">
               {evidence.length === 0 && (
                 <p className="text-center text-slate-500 py-4">
@@ -87,8 +87,11 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                 </p>
               )}
               {evidence.map(file => (
-                <div key={file.id} className="bg-black/50 p-4 rounded-lg border border-slate-600 space-y-3">
-                  <div className="flex justify-between items-start">
+                <article
+                  key={file.id}
+                  className="bg-black/50 p-5 rounded-2xl border border-slate-600 space-y-4 shadow-lg shadow-amber-500/10 transition-transform duration-300 ease-out hover:scale-105 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-amber-300"
+                >
+                  <div className="flex justify-between items-start gap-4">
                     <div>
                       <p className="font-semibold text-slate-200 break-all">{file.name}</p>
                       <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
@@ -96,7 +99,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                     <button
                       onClick={() => removeEvidenceItem(file.id)}
                       aria-label={`Remove ${file.name}`}
-                      className="text-slate-400 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                      className="text-slate-400 hover:text-red-400 transition-colors p-1 flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +123,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                     <select
                       value={file.category}
                       onChange={event => updateEvidenceItem(file.id, 'category', event.target.value)}
-                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
                     >
                       {EVIDENCE_CATEGORIES.map(cat => (
                         <option key={cat} value={cat}>
@@ -133,51 +136,53 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                       placeholder="Brief description of this file..."
                       value={file.description}
                       onChange={event => updateEvidenceItem(file.id, 'description', event.target.value)}
-                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
                     />
                   </div>
                   <p className="text-xs text-slate-400">
                     This information is temporary and resets if you refresh the page.
                   </p>
-                </div>
+                </article>
               ))}
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-700/50">
-              <label
-                htmlFor="file-upload"
-                className="w-full p-6 border-2 border-dashed border-amber-500/50 text-amber-300 bg-amber-900/10 rounded-xl hover:bg-amber-900/20 transition-all duration-200 flex flex-col items-center justify-center font-semibold cursor-pointer"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-8 h-8 mb-2"
+            <section className="mt-6 pt-6 border-t border-slate-700/50">
+              <article className="rounded-2xl shadow-lg shadow-amber-500/10 transition-transform duration-300 ease-out hover:scale-105">
+                <label
+                  htmlFor="file-upload"
+                  className="w-full p-6 border-2 border-dashed border-amber-500/60 text-amber-300 bg-amber-900/10 rounded-2xl shadow-inner shadow-amber-500/5 hover:bg-amber-900/20 active:bg-amber-900/30 transition-all duration-300 ease-out flex flex-col items-center justify-center font-semibold cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
                 >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <span>Click to Upload or Drag &amp; Drop</span>
-                <span className="text-xs text-slate-400 font-normal mt-1">
-                  Images, PDFs, Audio, or Video (demo only)
-                </span>
-              </label>
-              <input
-                id="file-upload"
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*,application/pdf,audio/*,video/*"
-              />
-            </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-8 h-8 mb-2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span>Click to Upload or Drag &amp; Drop</span>
+                  <span className="text-xs text-slate-400 font-normal mt-1">
+                    Images, PDFs, Audio, or Video (demo only)
+                  </span>
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*,application/pdf,audio/*,video/*"
+                />
+              </article>
+            </section>
           </div>
         </div>
       </div>
