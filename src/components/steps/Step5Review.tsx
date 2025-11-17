@@ -13,21 +13,21 @@ interface Step5ReviewProps {
 }
 
 const InfoRow: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex flex-col rounded-2xl border border-slate-800 bg-black/30 px-4 py-3">
+  <div className="flex w-full max-w-xs flex-col items-center rounded-2xl border border-slate-800 bg-black/30 px-6 py-4 text-center">
     <span className="text-xs uppercase tracking-wide text-slate-400">{label}</span>
     <span className="text-base font-semibold text-[#FFD700]">{value || '—'}</span>
   </div>
 );
 
-const PillList: React.FC<{ title: string; items: string[] }> = ({ title, items }) => {
+const PillCard: React.FC<{ title: string; items: string[] }> = ({ title, items }) => {
   if (!items.length) {
     return null;
   }
 
   return (
-    <div>
-      <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">{title}</p>
-      <div className="flex flex-wrap gap-2">
+    <section className="space-y-3 rounded-2xl border border-slate-800 bg-black/30 p-5 text-center">
+      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{title}</p>
+      <div className="flex flex-wrap justify-center gap-2">
         {items.map(item => (
           <span
             key={item}
@@ -37,7 +37,7 @@ const PillList: React.FC<{ title: string; items: string[] }> = ({ title, items }
           </span>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -110,17 +110,261 @@ const escapeHtml = (value: string): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const convertMarkdownToHtml = (value: string): string => {
-  const escaped = escapeHtml(value);
-  const withBold = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  const withLinks = withBold.replace(
+const formatInlineMarkdown = (value: string): string => {
+  let text = escapeHtml(value);
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+  text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+  text = text.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
-  return withLinks
-    .split(/\n{2,}/)
-    .map(segment => `<p>${segment.replace(/\n/g, '<br />')}</p>`)
-    .join('');
+  return text;
+};
+
+const convertMarkdownToHtml = (value: string): string => {
+  const lines = value.split(/\r?\n/);
+  const htmlParts: string[] = [];
+  let paragraphBuffer: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+  let listItems: string[] = [];
+
+  const flushParagraph = () => {
+    if (paragraphBuffer.length) {
+      htmlParts.push(`<p>${formatInlineMarkdown(paragraphBuffer.join(' '))}</p>`);
+      paragraphBuffer = [];
+    }
+  };
+
+  const flushList = () => {
+    if (listType && listItems.length) {
+      const itemsMarkup = listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('');
+      htmlParts.push(`<${listType}>${itemsMarkup}</${listType}>`);
+      listItems = [];
+    }
+    listType = null;
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      const level = Math.min(headingMatch[1].length + 1, 4);
+      const tag = `h${level}`;
+      htmlParts.push(`<${tag}>${formatInlineMarkdown(headingMatch[2])}</${tag}>`);
+      continue;
+    }
+
+    const blockquoteMatch = line.match(/^>\s?(.*)$/);
+    if (blockquoteMatch) {
+      flushParagraph();
+      flushList();
+      htmlParts.push(`<blockquote>${formatInlineMarkdown(blockquoteMatch[1])}</blockquote>`);
+      continue;
+    }
+
+    const unorderedMatch = line.match(/^[-*+]\s+(.*)$/);
+    if (unorderedMatch) {
+      flushParagraph();
+      if (listType !== 'ul') {
+        flushList();
+        listType = 'ul';
+      }
+      listItems.push(unorderedMatch[1]);
+      continue;
+    }
+
+    const orderedMatch = line.match(/^\d+\.\s+(.*)$/);
+    if (orderedMatch) {
+      flushParagraph();
+      if (listType !== 'ol') {
+        flushList();
+        listType = 'ol';
+      }
+      listItems.push(orderedMatch[1]);
+      continue;
+    }
+
+    if (listType) {
+      flushList();
+    }
+    paragraphBuffer.push(line);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return htmlParts.join('');
+};
+
+interface NormalizedSource {
+  id: string;
+  original: string;
+  url: string;
+  host: string;
+  isCanLii: boolean;
+}
+
+const normalizeSources = (sources: string[]): NormalizedSource[] =>
+  sources
+    .map((source, index) => {
+      const url = source.startsWith('http') ? source : `https://${source}`;
+      try {
+        const { hostname } = new URL(url);
+        const host = hostname.replace(/^www\./, '');
+        return {
+          id: `${host}-${index}`,
+          original: source,
+          url,
+          host,
+          isCanLii: host.includes('canlii'),
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter((item): item is NormalizedSource => Boolean(item));
+
+const STATUTE_HINTS = [
+  {
+    jurisdiction: 'ontario',
+    keyword: 'family law act',
+    title: 'Family Law Act',
+    description:
+      'Covers parenting obligations, best-interest factors, and remedies available when the child is exposed to conflict.',
+    url: 'https://www.ontario.ca/laws/statute/90f03',
+  },
+  {
+    jurisdiction: 'ontario',
+    keyword: "children's law reform act",
+    title: "Children's Law Reform Act",
+    description:
+      'Sets out decision-making responsibility and contact principles, emphasizing stability and the child’s emotional safety.',
+    url: 'https://www.ontario.ca/laws/statute/90c12',
+  },
+  {
+    jurisdiction: 'ontario',
+    keyword: 'child, youth and family services act',
+    title: 'Child, Youth and Family Services Act',
+    description: 'Defines duties to protect children from emotional harm and provides reporting routes.',
+    url: 'https://www.ontario.ca/laws/statute/17c14',
+  },
+];
+
+const JURISDICTION_LEGISLATION: Record<string, { title: string; url: string }[]> = {
+  ontario: [
+    {
+      title: 'Family Law Act (Ontario)',
+      url: 'https://www.ontario.ca/laws/statute/90f03',
+    },
+    {
+      title: "Children's Law Reform Act (Ontario)",
+      url: 'https://www.ontario.ca/laws/statute/90c12',
+    },
+    {
+      title: 'Child, Youth and Family Services Act (Ontario)',
+      url: 'https://www.ontario.ca/laws/statute/17c14',
+    },
+  ],
+};
+
+interface StatuteSummary {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  sourceLabel: string;
+  isCanLii: boolean;
+}
+
+const deriveStatuteSummaries = (
+  legalInsights: string,
+  sources: NormalizedSource[],
+  jurisdiction: string
+): StatuteSummary[] => {
+  const normalizedText = legalInsights.toLowerCase();
+  const summaries: StatuteSummary[] = [];
+
+  const pickSource = (predicate?: (source: NormalizedSource) => boolean) =>
+    (predicate ? sources.find(predicate) : undefined) ?? sources.find(source => source.isCanLii) ?? sources[0];
+
+  STATUTE_HINTS.forEach((hint, index) => {
+    const jurisdictionMatches =
+      !hint.jurisdiction || hint.jurisdiction === jurisdiction.trim().toLowerCase();
+    if (jurisdictionMatches && normalizedText.includes(hint.keyword)) {
+      summaries.push({
+        id: `${hint.keyword}-${index}`,
+        title: `${hint.title}${jurisdiction ? ` (${jurisdiction})` : ''}`,
+        description: hint.description,
+        url: hint.url,
+        sourceLabel: 'Government of Ontario',
+        isCanLii: false,
+      });
+    }
+  });
+
+  if (!summaries.length && sources.length) {
+    const source = pickSource();
+    summaries.push({
+      id: `source-${source!.id}`,
+      title: `Applicable Legislation (${source!.host})`,
+      description: `Review the cited legislation for custody and conduct guidance in ${
+        jurisdiction || 'family law'
+      }.`,
+      url: source!.url,
+      sourceLabel: source!.host,
+      isCanLii: source!.isCanLii,
+    });
+  }
+
+  return summaries;
+};
+
+interface LegalInsightBrief {
+  id: string;
+  title: string;
+  html: string;
+}
+
+const createLegalInsightBriefs = (rawBlocks: string[]): LegalInsightBrief[] =>
+  rawBlocks
+    .map(block => block.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((text, index) => {
+      const truncated = text.length > 200 ? `${text.slice(0, 197)}…` : text;
+      const html = convertMarkdownToHtml(truncated);
+      const firstLine = text.split(/[.!?]/)[0];
+      return {
+        id: `insight-brief-${index}`,
+        title: `Insight ${index + 1}`,
+        html,
+      };
+    });
+
+const getJurisdictionResources = (jurisdiction: string): { id: string; title: string; url: string }[] => {
+  if (!jurisdiction) {
+    return [];
+  }
+  const key = jurisdiction.trim().toLowerCase();
+  const matches = JURISDICTION_LEGISLATION[key];
+  if (!matches) {
+    return [];
+  }
+  return matches.map((resource, index) => ({
+    id: `${key}-resource-${index}`,
+    ...resource,
+  }));
 };
 
 const Step5Review: React.FC<Step5ReviewProps> = ({
@@ -135,9 +379,18 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   const classificationDisplay = reportResult?.category ?? 'Pending AI classification';
   const severityDisplay = reportResult?.severity ?? 'Pending AI classification';
   const severityJustification = reportResult?.severityJustification ?? 'Details pending AI review.';
-  const legalInsightsHtml = reportResult?.legalInsights
-    ? convertMarkdownToHtml(reportResult.legalInsights)
-    : '';
+  const normalizedSources = normalizeSources(reportResult?.sources ?? []);
+  const legalInsightRawBlocks = reportResult?.legalInsights
+    ? reportResult.legalInsights
+        .split(/\n{2,}/)
+        .map(block => block.trim())
+        .filter(Boolean)
+    : [];
+  const legalInsightBriefs = createLegalInsightBriefs(legalInsightRawBlocks);
+  const statuteSummaries = reportResult
+    ? deriveStatuteSummaries(reportResult.legalInsights ?? '', normalizedSources, jurisdiction)
+    : [];
+  const jurisdictionResources = getJurisdictionResources(jurisdiction);
 
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
@@ -155,43 +408,52 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           title="Incident Overview"
           description="Confirm the factual details before generating the AI summary."
         >
-          <div className="grid gap-4 sm:grid-cols-3">
-            <InfoRow label="Date" value={incidentData.date} />
-            <InfoRow label="Time" value={incidentData.time} />
-            <InfoRow label="Jurisdiction" value={jurisdiction} />
-            <InfoRow label="Incident Type" value={classificationDisplay} />
-            <InfoRow label="Severity" value={severityDisplay} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 justify-items-center">
+            {[
+              { label: 'Date', value: incidentData.date },
+              { label: 'Time', value: incidentData.time },
+              { label: 'Jurisdiction', value: jurisdiction },
+              { label: 'Incident Type', value: classificationDisplay },
+              { label: 'Severity', value: severityDisplay },
+            ].map(item => (
+              <InfoRow key={item.label} label={item.label} value={item.value} />
+            ))}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <InfoRow label="Case Number" value={caseNumber || 'Optional'} />
-            <InfoRow label="Evidence Items" value={String(evidence.length)} />
+          <div className="grid gap-4 sm:grid-cols-2 justify-items-center">
+            {[
+              { label: 'Case Number', value: caseNumber || 'Optional' },
+              { label: 'Evidence Items', value: String(evidence.length) },
+            ].map(item => (
+              <InfoRow key={item.label} label={item.label} value={item.value} />
+            ))}
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-black/30 p-6 space-y-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-[0.3em]">
-              Narrative Snapshot
-            </p>
-            <p className="text-sm leading-relaxed text-slate-200">
-              {narrative || 'No narrative provided yet.'}
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <PillList title="Parties" items={parties} />
-            <PillList title="Children" items={children} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-800 bg-black/30 p-6 text-center space-y-3">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-[0.3em]">
+                Narrative Snapshot
+              </p>
+              <p className="text-sm leading-relaxed text-slate-200">
+                {narrative || 'No narrative provided yet.'}
+              </p>
+            </div>
+            <div className="space-y-6">
+              <PillCard title="Parties" items={parties} />
+              <PillCard title="Children" items={children} />
+            </div>
           </div>
 
           {Boolean(evidence.length) && (
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-2">
+            <div className="rounded-2xl border border-slate-800 bg-black/20 px-4 py-3 text-sm">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-3 text-center">
                 Evidence Overview
               </p>
               <div className="space-y-3">
                 {evidence.map(item => (
                   <div
                     key={item.id}
-                    className="rounded-2xl border border-slate-800 bg-black/20 px-4 py-3 text-sm"
+                    className="rounded-2xl border border-slate-800 bg-black/20 px-4 py-3 text-sm text-center"
                   >
                     <p className="font-semibold text-slate-100">{item.name}</p>
                     <p className="text-xs text-slate-400">
@@ -250,7 +512,9 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           {reportResult ? (
             <div className="space-y-4">
               {reportResult.title && (
-                <Section title="Report Title" content={reportResult.title} headingLevel="h2" />
+                <section className="rounded-2xl border border-slate-800 bg-black/30 p-6 text-center">
+                  <H2 className="text-3xl font-semibold text-[#FFD700]">{reportResult.title}</H2>
+                </section>
               )}
               <Section
                 title="Professional Summary"
@@ -259,35 +523,134 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
                 headingLevel="h2"
               />
               <Section title="Severity Justification" content={severityJustification} />
-              {legalInsightsHtml && (
-                <Section
-                  title="Legal Insights"
-                  content={legalInsightsHtml}
-                  headingLevel="h2"
-                  renderHtml
-                />
+              {(statuteSummaries.length > 0 || legalInsightBriefs.length > 0 || jurisdictionResources.length > 0) && (
+                <section className="rounded-2xl border border-amber-500/40 bg-amber-950/10 p-6 space-y-5">
+                  <div className="flex flex-col gap-2 text-center sm:text-left">
+                    <div className="flex items-center justify-center gap-3 text-amber-200 sm:justify-start">
+                      <div className="rounded-full border border-amber-400/40 bg-amber-400/10 p-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M7 7h.01M4 6h16M4 10h16M4 14h16M4 18h16"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-amber-200">
+                          Legal Insights
+                        </p>
+                        <p className="text-sm text-slate-300">
+                          Brief statutes sourced from CanLII and public legislation databases.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {legalInsightBriefs.length > 0 && (
+                    <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-3">
+                        Insight Highlights
+                      </p>
+                      <div className="space-y-3">
+                        {legalInsightBriefs.map(brief => (
+                          <div key={brief.id} className="rounded-xl border border-slate-800/60 bg-black/40 p-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-amber-200 mb-2">
+                              {brief.title}
+                            </p>
+                            <div
+                              className="text-sm leading-relaxed text-slate-200 [&_a]:text-amber-300 [&_a:hover]:underline"
+                              dangerouslySetInnerHTML={{ __html: brief.html }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {statuteSummaries.length > 0 && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {statuteSummaries.map(statute => (
+                        <div
+                          key={statute.id}
+                          className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 shadow-inner"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <p className="text-sm font-semibold text-[#FFD700]">{statute.title}</p>
+                            <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                              {statute.sourceLabel}
+                              {statute.isCanLii && ' • CanLII'}
+                            </span>
+                          </div>
+                          <p className="mt-3 text-sm text-slate-200">{statute.description}</p>
+                          <a
+                            href={statute.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex items-center text-sm font-semibold text-amber-300 hover:underline"
+                          >
+                            View legislation
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="ml-1 h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17l10-10M9 7h8v8" />
+                            </svg>
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {jurisdictionResources.length > 0 && (
+                    <div className="rounded-2xl border border-slate-800 bg-black/30 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">
+                        Jurisdiction Legislation
+                      </p>
+                      <ul className="space-y-2 text-sm text-slate-200">
+                        {jurisdictionResources.map(resource => (
+                          <li key={resource.id}>
+                            <a
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-amber-300 hover:underline"
+                            >
+                              {resource.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </section>
               )}
-              {Boolean(reportResult.sources?.length) && (
+              {Boolean(normalizedSources.length) && (
                 <section className="rounded-2xl border border-slate-800 bg-black/30 p-6 space-y-3">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-[0.3em]">
                     Official Sources
                   </p>
                   <ul className="list-disc space-y-1 pl-5 text-sm text-slate-200">
-                    {reportResult.sources.map(source => {
-                      const normalized = source.startsWith('http') ? source : `https://${source}`;
-                      return (
-                        <li key={source}>
-                          <a
-                            href={normalized}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-amber-300 hover:underline"
-                          >
-                            {source}
-                          </a>
-                        </li>
-                      );
-                    })}
+                    {normalizedSources.map(source => (
+                      <li key={source.id}>
+                        <a
+                          href={source.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-300 hover:underline"
+                        >
+                          {source.original}
+                        </a>
+                      </li>
+                    ))}
                   </ul>
                 </section>
               )}
