@@ -2,6 +2,7 @@ import React from 'react';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
 import type { IncidentData, ReportResult } from '../../types';
+import { RESOURCE_LINKS } from '../../config/links';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -215,17 +216,42 @@ interface NormalizedSource {
   isCanLii: boolean;
 }
 
-const normalizeSources = (sources: string[]): NormalizedSource[] =>
-  sources
+const cleanSourceValue = (value: string): string =>
+  value
+    .trim()
+    .replace(/^[-•\s]+/, '')
+    .replace(/[)\].,;]+$/, '');
+
+const normalizeSources = (sources: string[]): NormalizedSource[] => {
+  const seen = new Set<string>();
+
+  return sources
     .map((source, index) => {
-      const url = source.startsWith('http') ? source : `https://${source}`;
+      const cleaned = cleanSourceValue(source);
+      if (!cleaned) {
+        return null;
+      }
+
+      const urlWithProtocol = cleaned.match(/^https?:\/\//i) ? cleaned : `https://${cleaned}`;
+
       try {
-        const { hostname } = new URL(url);
-        const host = hostname.replace(/^www\./, '');
+        const parsed = new URL(urlWithProtocol);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          return null;
+        }
+
+        const host = parsed.hostname.replace(/^www\./, '');
+        const normalizedUrl = `${parsed.protocol}//${host}${parsed.pathname}${parsed.search}${parsed.hash}`;
+
+        if (seen.has(normalizedUrl)) {
+          return null;
+        }
+
+        seen.add(normalizedUrl);
         return {
           id: `${host}-${index}`,
-          original: source,
-          url,
+          original: cleaned,
+          url: normalizedUrl,
           host,
           isCanLii: host.includes('canlii'),
         };
@@ -234,6 +260,7 @@ const normalizeSources = (sources: string[]): NormalizedSource[] =>
       }
     })
     .filter((item): item is NormalizedSource => Boolean(item));
+};
 
 const STATUTE_HINTS = [
   {
@@ -274,6 +301,99 @@ const JURISDICTION_LEGISLATION: Record<string, { title: string; url: string }[]>
     {
       title: 'Child, Youth and Family Services Act (Ontario)',
       url: 'https://www.ontario.ca/laws/statute/17c14',
+    },
+  ],
+};
+
+const CANADIAN_JURISDICTIONS = [
+  'alberta',
+  'british columbia',
+  'manitoba',
+  'new brunswick',
+  'newfoundland and labrador',
+  'northwest territories',
+  'nova scotia',
+  'nunavut',
+  'ontario',
+  'prince edward island',
+  'quebec',
+  'saskatchewan',
+  'yukon',
+];
+
+const US_JURISDICTIONS = [
+  'alabama',
+  'alaska',
+  'arizona',
+  'arkansas',
+  'california',
+  'colorado',
+  'connecticut',
+  'delaware',
+  'district of columbia',
+  'florida',
+  'georgia',
+  'hawaii',
+  'idaho',
+  'illinois',
+  'indiana',
+  'iowa',
+  'kansas',
+  'kentucky',
+  'louisiana',
+  'maine',
+  'maryland',
+  'massachusetts',
+  'michigan',
+  'minnesota',
+  'mississippi',
+  'missouri',
+  'montana',
+  'nebraska',
+  'nevada',
+  'new hampshire',
+  'new jersey',
+  'new mexico',
+  'new york',
+  'north carolina',
+  'north dakota',
+  'ohio',
+  'oklahoma',
+  'oregon',
+  'pennsylvania',
+  'rhode island',
+  'south carolina',
+  'south dakota',
+  'tennessee',
+  'texas',
+  'utah',
+  'vermont',
+  'virginia',
+  'washington',
+  'west virginia',
+  'wisconsin',
+  'wyoming',
+];
+
+const REGIONAL_RESOURCES: Record<'canada' | 'us', { title: string; url: string }[]> = {
+  canada: [
+    {
+      title: 'Parenting Plan Guide (Ontario)',
+      url: RESOURCE_LINKS.canadaParentingPlanGuide,
+    },
+    {
+      title: 'Canadian Legal Aid Programs',
+      url: RESOURCE_LINKS.canadaLegalAid,
+    },
+  ],
+  us: [
+    {
+      title: 'Find Legal Aid (USA.gov)',
+      url: RESOURCE_LINKS.usLegalAid,
+    },
+    {
+      title: 'Child Welfare Policy Library (ChildWelfare.gov)',
+      url: RESOURCE_LINKS.usChildWelfare,
     },
   ],
 };
@@ -357,12 +477,20 @@ const getJurisdictionResources = (jurisdiction: string): { id: string; title: st
     return [];
   }
   const key = jurisdiction.trim().toLowerCase();
-  const matches = JURISDICTION_LEGISLATION[key];
-  if (!matches) {
+  const matches = JURISDICTION_LEGISLATION[key] ?? [];
+  const region = CANADIAN_JURISDICTIONS.includes(key)
+    ? 'canada'
+    : US_JURISDICTIONS.includes(key)
+      ? 'us'
+      : null;
+  const regionResources = region ? REGIONAL_RESOURCES[region] : [];
+
+  if (!matches.length && !regionResources.length) {
     return [];
   }
-  return matches.map((resource, index) => ({
-    id: `${key}-resource-${index}`,
+
+  return [...matches, ...regionResources].map((resource, index) => ({
+    id: `${key || region}-resource-${index}`,
     ...resource,
   }));
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import H1 from '../ui/H1';
+import { SITE_LINKS } from '../../config/links';
 
 interface Step0ConsentProps {
   acknowledged: boolean;
@@ -48,7 +49,7 @@ const Step0Consent: React.FC<Step0ConsentProps> = ({ acknowledged, onChange }) =
             <>
               I acknowledge that I have read and agree to the{' '}
               <a
-                href="https://custodybuddy.com/incident-report/privacy-policy/"
+                href={SITE_LINKS.privacy}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-amber-400 hover:underline"
@@ -57,7 +58,7 @@ const Step0Consent: React.FC<Step0ConsentProps> = ({ acknowledged, onChange }) =
               </a>
               ,{' '}
               <a
-                href="https://custodybuddy.com/incident-report/terms-of-use/"
+                href={SITE_LINKS.terms}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-amber-400 hover:underline"
@@ -66,7 +67,7 @@ const Step0Consent: React.FC<Step0ConsentProps> = ({ acknowledged, onChange }) =
               </a>
               , and{' '}
               <a
-                href="https://custodybuddy.com/incident-report/legal-disclaimer/"
+                href={SITE_LINKS.disclaimer}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-amber-400 hover:underline"

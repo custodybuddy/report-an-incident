@@ -1,13 +1,14 @@
 import React from 'react';
 import H1 from './ui/H1';
+import { SITE_LINKS } from '../config/links';
 
 interface HeaderProps {
   onCreateNewReport: () => void;
 }
 
 const navLinks = [
-  { href: 'https://custodybuddy.com/', label: 'Home' },
-  { href: 'https://custodybuddy.com/contact/', label: 'Contact' },
+  { href: SITE_LINKS.home, label: 'Home' },
+  { href: SITE_LINKS.contact, label: 'Contact' },
 ];
 
 const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
@@ -39,6 +40,8 @@ const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
                 <a
                   key={href}
                   href={href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="relative inline-flex items-center rounded-lg px-3 py-1.5 text-slate-100/90 transition-colors duration-200 hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 >
                   {label}
