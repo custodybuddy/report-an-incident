@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
 import type { IncidentData, ReportResult } from '../../types';
@@ -143,18 +143,39 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   const classificationDisplay = reportResult?.category ?? 'Pending AI classification';
   const severityDisplay = reportResult?.severity ?? 'Pending AI classification';
   const severityJustification = reportResult?.severityJustification ?? 'Details pending AI review.';
-  const normalizedSources = normalizeSources(reportResult?.sources ?? []);
-  const legalInsightRawBlocks = reportResult?.legalInsights
-    ? reportResult.legalInsights
-        .split(/\n{2,}/)
-        .map(block => block.trim())
-        .filter(Boolean)
-    : [];
-  const legalInsightBriefs = createLegalInsightBriefs(legalInsightRawBlocks);
-  const statuteSummaries = reportResult
-    ? deriveStatuteSummaries(reportResult.legalInsights ?? '', normalizedSources, jurisdiction)
-    : [];
-  const jurisdictionResources = getJurisdictionResources(jurisdiction);
+  const normalizedSources = useMemo(
+    () => normalizeSources(reportResult?.sources ?? []),
+    [reportResult?.sources],
+  );
+
+  const legalInsightRawBlocks = useMemo(() => {
+    if (!reportResult?.legalInsights) {
+      return [];
+    }
+
+    return reportResult.legalInsights
+      .split(/\n{2,}/)
+      .map(block => block.trim())
+      .filter(Boolean);
+  }, [reportResult?.legalInsights]);
+
+  const legalInsightBriefs = useMemo(
+    () => createLegalInsightBriefs(legalInsightRawBlocks),
+    [legalInsightRawBlocks],
+  );
+
+  const statuteSummaries = useMemo(
+    () =>
+      reportResult
+        ? deriveStatuteSummaries(reportResult.legalInsights ?? '', normalizedSources, jurisdiction)
+        : [],
+    [jurisdiction, normalizedSources, reportResult],
+  );
+
+  const jurisdictionResources = useMemo(
+    () => getJurisdictionResources(jurisdiction),
+    [jurisdiction],
+  );
 
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
