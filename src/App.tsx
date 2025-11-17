@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import ProgressBar from './components/ProgressBar';
 import Navigation from './components/Navigation';
@@ -8,50 +8,170 @@ import Step2Narrative from './components/steps/Step2Narrative';
 import Step3Involved from './components/steps/Step3Involved';
 import Step4Evidence from './components/steps/Step4Evidence';
 import Step5Review from './components/steps/Step5Review';
-import Modal from './components/Modal';
 import Footer from './components/Footer';
-import { STEPS } from '@/ui/steps';
-import { useReportWorkflow } from './hooks/useReportWorkflow';
+import { STEPS } from './ui/steps';
+import { createInitialIncident, type IncidentData, type ReportResult } from './types';
+import { generateIncidentReport } from './services/reportGenerator';
 
 function App() {
-  const {
-    incidentData,
-    currentStep,
-    updateIncidentData,
-    goToStep,
-    canProceed,
-    errors,
-    reportData,
-    isGeneratingSummary,
-    modal,
-    handleNextStep,
-    handlePrevStep,
-    handleStartNewReport,
-    handleCancel,
-    handleExport,
-    handlePrint,
-  } = useReportWorkflow();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [incidentData, setIncidentData] = useState<IncidentData>(() => createInitialIncident());
+  const [reportResult, setReportResult] = useState<ReportResult | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  const clearGeneratedReport = useCallback(() => {
+    setReportResult(null);
+    setReportError(null);
+  }, []);
+
+  const updateIncidentData = useCallback(
+    <K extends keyof IncidentData>(key: K, value: IncidentData[K]) => {
+      setIncidentData(prev => {
+        if (prev[key] === value) {
+          return prev;
+        }
+        clearGeneratedReport();
+        return {
+          ...prev,
+          [key]: value,
+        };
+      });
+    },
+    [clearGeneratedReport]
+  );
+
+  const resetWizard = () => {
+    setIncidentData(createInitialIncident());
+    setReportResult(null);
+    setReportError(null);
+    setCurrentStep(1);
+  };
+
+  type StepValidationEntry = [step: number, isValid: boolean];
+  const stepValidationEntries = useMemo<StepValidationEntry[]>(
+    () => [
+      [1, incidentData.consentAcknowledged],
+      [2, Boolean(incidentData.date && incidentData.time)],
+      [3, incidentData.narrative.trim().length >= 100],
+      [4, incidentData.parties.length > 0],
+      [5, Boolean(incidentData.jurisdiction)],
+    ],
+    [incidentData]
+  );
+
+  const maxAccessibleStep = useMemo(() => {
+    let maxStep = 1;
+    for (const [step, isValid] of stepValidationEntries) {
+      if (!isValid) {
+        break;
+      }
+      maxStep = Math.min(step + 1, STEPS.length);
+    }
+    return maxStep;
+  }, [stepValidationEntries]);
+
+  useEffect(() => {
+    if (currentStep > maxAccessibleStep) {
+      setCurrentStep(maxAccessibleStep);
+    }
+  }, [currentStep, maxAccessibleStep]);
+
+  const goToStep = useCallback(
+    (step: number) => {
+      setCurrentStep(Math.min(Math.max(step, 1), maxAccessibleStep));
+    },
+    [maxAccessibleStep]
+  );
+
+  const handlePrevStep = useCallback(() => {
+    setCurrentStep(prev => Math.max(1, prev - 1));
+  }, []);
+
+  const handleNextStep = useCallback(() => {
+    setCurrentStep(prev => Math.min(maxAccessibleStep, prev + 1));
+  }, [maxAccessibleStep]);
+
+  const handleStartNewReport = () => {
+    resetWizard();
+  };
+
+  const handleGenerateReport = async () => {
+    if (isGeneratingReport) {
+      return;
+    }
+    setIsGeneratingReport(true);
+    setReportError(null);
+    try {
+      const result = await generateIncidentReport(incidentData);
+      setReportResult(result);
+    } catch (error) {
+      setReportError(
+        error instanceof Error ? error.message : 'Unable to generate report. Please try again.'
+      );
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
+  const canProceed = useMemo(() => {
+    const entry = stepValidationEntries.find(([step]) => step === currentStep);
+    return entry ? entry[1] : true;
+  }, [currentStep, stepValidationEntries]);
 
   const stepContent = useMemo(() => {
     switch (currentStep) {
       case 1:
-        return <Step0Consent data={incidentData} updateData={updateIncidentData} errors={errors} />;
+        return (
+          <Step0Consent
+            acknowledged={incidentData.consentAcknowledged}
+            onChange={value => updateIncidentData('consentAcknowledged', value)}
+          />
+        );
       case 2:
-        return <Step1DateTime data={incidentData} updateData={updateIncidentData} errors={errors} />;
+        return (
+          <Step1DateTime
+            date={incidentData.date}
+            time={incidentData.time}
+            onChange={(field, value) => updateIncidentData(field, value)}
+          />
+        );
       case 3:
-        return <Step2Narrative data={incidentData} updateData={updateIncidentData} errors={errors} />;
+        return (
+          <Step2Narrative
+            narrative={incidentData.narrative}
+            onChange={value => updateIncidentData('narrative', value)}
+          />
+        );
       case 4:
-        return <Step3Involved data={incidentData} updateData={updateIncidentData} errors={errors} />;
+        return (
+          <Step3Involved
+            parties={incidentData.parties}
+            children={incidentData.children}
+            onPartiesChange={items => updateIncidentData('parties', items)}
+            onChildrenChange={items => updateIncidentData('children', items)}
+          />
+        );
       case 5:
-        return <Step4Evidence data={incidentData} updateData={updateIncidentData} errors={errors} />;
+        return (
+          <Step4Evidence
+            jurisdiction={incidentData.jurisdiction}
+            caseNumber={incidentData.caseNumber}
+            evidence={incidentData.evidence}
+            onJurisdictionChange={value => updateIncidentData('jurisdiction', value)}
+            onCaseNumberChange={value => updateIncidentData('caseNumber', value)}
+            onEvidenceChange={items => updateIncidentData('evidence', items)}
+          />
+        );
       case 6:
         return (
           <Step5Review
             incidentData={incidentData}
-            reportData={reportData}
-            isGeneratingSummary={isGeneratingSummary}
-            onExport={handleExport}
-            onPrint={handlePrint}
+            reportResult={reportResult}
+            isGenerating={isGeneratingReport}
+            error={reportError}
+            onGenerateReport={handleGenerateReport}
+            onReset={resetWizard}
           />
         );
       default:
@@ -59,13 +179,10 @@ function App() {
     }
   }, [
     currentStep,
-    errors,
-    handleExport,
-    handlePrint,
     incidentData,
-    isGeneratingSummary,
-    reportData,
-    updateIncidentData,
+    reportResult,
+    isGeneratingReport,
+    reportError,
   ]);
 
   return (
@@ -79,7 +196,7 @@ function App() {
             <Navigation
               onPrev={handlePrevStep}
               onNext={handleNextStep}
-              onCancel={handleCancel}
+              onCancel={handleStartNewReport}
               currentStep={currentStep}
               canProceed={canProceed}
             />
@@ -87,7 +204,6 @@ function App() {
         </div>
       </main>
       <Footer />
-      {modal && <Modal {...modal} />}
     </>
   );
 }

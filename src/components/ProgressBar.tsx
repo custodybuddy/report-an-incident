@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { type Step } from '@/types/ui';
+import type { StepMeta } from '../ui/steps';
 
 interface ProgressBarProps {
-  steps: Step[];
+  steps: StepMeta[];
   currentStep: number;
   goToStep: (step: number) => void;
 }

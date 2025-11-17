@@ -1,4 +1,4 @@
-import { type Step } from '@/types/ui';
+import type { ComponentType, SVGProps } from 'react';
 import {
   ConsentIcon,
   DateTimeIcon,
@@ -8,7 +8,13 @@ import {
   ReviewExportIcon,
 } from '@/components/icons/StepIcons';
 
-export const STEPS: Step[] = [
+export interface StepMeta {
+  number: number;
+  title: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+}
+
+export const STEPS: StepMeta[] = [
   { number: 1, title: 'Consent', icon: ConsentIcon },
   { number: 2, title: 'Date & Time', icon: DateTimeIcon },
   { number: 3, title: 'What Happened', icon: NarrativeIcon },

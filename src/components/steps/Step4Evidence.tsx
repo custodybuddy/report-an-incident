@@ -1,37 +1,127 @@
 import React from 'react';
-import { type IncidentData, type IncidentDataUpdater } from '@/types';
-import { EVIDENCE_CATEGORIES } from '@/constants';
-import { JURISDICTIONS } from '@/constants';
 import H2 from '../ui/H2';
-import { useEvidenceManager } from '../../hooks/useEvidenceManager';
+import type { EvidenceItem } from '../../types';
 
-interface Step4Props {
-  data: Pick<IncidentData, 'jurisdiction' | 'evidence' | 'narrative' | 'caseNumber'>;
-  updateData: IncidentDataUpdater;
-  errors: { jurisdiction?: string };
+const JURISDICTIONS = [
+  'Alabama',
+  'Alaska',
+  'Arizona',
+  'Arkansas',
+  'California',
+  'Colorado',
+  'Connecticut',
+  'Delaware',
+  'District of Columbia',
+  'Florida',
+  'Georgia',
+  'Hawaii',
+  'Idaho',
+  'Illinois',
+  'Indiana',
+  'Iowa',
+  'Kansas',
+  'Kentucky',
+  'Louisiana',
+  'Maine',
+  'Maryland',
+  'Massachusetts',
+  'Michigan',
+  'Minnesota',
+  'Mississippi',
+  'Missouri',
+  'Montana',
+  'Nebraska',
+  'Nevada',
+  'New Hampshire',
+  'New Jersey',
+  'New Mexico',
+  'New York',
+  'North Carolina',
+  'North Dakota',
+  'Ohio',
+  'Oklahoma',
+  'Oregon',
+  'Pennsylvania',
+  'Rhode Island',
+  'South Carolina',
+  'South Dakota',
+  'Tennessee',
+  'Texas',
+  'Utah',
+  'Vermont',
+  'Virginia',
+  'Washington',
+  'West Virginia',
+  'Wisconsin',
+  'Wyoming',
+  'Alberta',
+  'British Columbia',
+  'Manitoba',
+  'New Brunswick',
+  'Newfoundland and Labrador',
+  'Northwest Territories',
+  'Nova Scotia',
+  'Nunavut',
+  'Ontario',
+  'Prince Edward Island',
+  'Quebec',
+  'Saskatchewan',
+  'Yukon',
+];
+
+const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'];
+
+interface Step4EvidenceProps {
+  jurisdiction: string;
+  caseNumber: string;
+  evidence: EvidenceItem[];
+  onJurisdictionChange: (value: string) => void;
+  onCaseNumberChange: (value: string) => void;
+  onEvidenceChange: (items: EvidenceItem[]) => void;
 }
 
-const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
-  const {
-    handleFileChange,
-    updateEvidenceItem,
-    removeEvidenceItem,
-    analysisState
-  } = useEvidenceManager({
-    narrative: data.narrative,
-    evidence: data.evidence,
-    updateData
-  });
+const Step4Evidence: React.FC<Step4EvidenceProps> = ({
+  jurisdiction,
+  caseNumber,
+  evidence,
+  onJurisdictionChange,
+  onCaseNumberChange,
+  onEvidenceChange,
+}) => {
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = event => {
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) {
+      return;
+    }
 
-  const jurisdictionError = errors.jurisdiction;
+    onEvidenceChange([
+      ...evidence,
+      ...files.map((file, index) => ({
+        id: `${file.name}-${Date.now()}-${index}`,
+        name: file.name,
+        size: file.size,
+        category: EVIDENCE_CATEGORIES[0],
+        description: '',
+      })),
+    ]);
+    event.target.value = '';
+  };
+
+  const updateEvidenceItem = (id: string, key: 'category' | 'description', value: string) => {
+    onEvidenceChange(evidence.map(item => (item.id === id ? { ...item, [key]: value } : item)));
+  };
+
+  const removeEvidenceItem = (id: string) => {
+    onEvidenceChange(evidence.filter(item => item.id !== id));
+  };
 
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
       <div className="text-center mb-8">
-        <H2 className="text-3xl font-bold text-[#FFD700] mb-2">Jurisdiction & Evidence</H2>
+        <H2 className="text-3xl font-bold text-[#FFD700] mb-2">Jurisdiction &amp; Evidence</H2>
         <p className="text-slate-400 max-w-lg mx-auto">
-          Specify the legal jurisdiction and upload any supporting evidence like screenshots,
-          documents, or recordings.
+          This screen mirrors the production styling but drops the AI + storage wiring. Uploading
+          files here only updates local state.
         </p>
       </div>
 
@@ -46,46 +136,30 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
           <div className="relative">
             <select
               id="jurisdiction-select"
-              value={data.jurisdiction}
-              onChange={event => updateData('jurisdiction', event.target.value)}
-              className={`w-full appearance-none bg-slate-800/50 border-2 rounded-xl px-4 py-3 text-slate-200 transition-all duration-300 focus:ring-4 focus:ring-amber-400/30 focus:border-amber-400 hover:border-amber-500 ${
-                jurisdictionError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/30'
-                  : 'border-slate-600'
-              }`}
-              aria-invalid={!!jurisdictionError}
-              aria-describedby={jurisdictionError ? 'jurisdiction-error' : undefined}
+              value={jurisdiction}
+              onChange={event => onJurisdictionChange(event.target.value)}
+              className="w-full appearance-none bg-slate-800/50 border-2 border-slate-600 rounded-xl px-4 py-3 text-slate-200 transition-all duration-300 focus:ring-4 focus:ring-amber-400/30 focus:border-amber-400 hover:border-amber-500"
             >
-              <option value="" disabled>
-                Select a jurisdiction...
-              </option>
-              {JURISDICTIONS.map(j => (
-                <option key={j} value={j}>
-                  {j}
+              <option value="">Select a jurisdiction...</option>
+              {JURISDICTIONS.map(name => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
           </div>
-          {jurisdictionError && (
-            <p id="jurisdiction-error" className="text-red-400 text-xs mt-1">
-              {jurisdictionError}
-            </p>
-          )}
         </div>
 
         <div>
-          <label
-            htmlFor="case-number-input"
-            className="block text-sm font-semibold text-slate-300 mb-2"
-          >
+          <label htmlFor="case-number-input" className="block text-sm font-semibold text-slate-300 mb-2">
             Case Number (Optional)
           </label>
           <div className="relative">
             <input
               type="text"
               id="case-number-input"
-              value={data.caseNumber}
-              onChange={event => updateData('caseNumber', event.target.value)}
+              value={caseNumber}
+              onChange={event => onCaseNumberChange(event.target.value)}
               placeholder="e.g., F-12345-67"
               className="w-full p-3 bg-slate-800/50 border-2 rounded-xl transition-all duration-300 shadow-sm text-slate-200 border-slate-600 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/30 hover:border-amber-500"
             />
@@ -96,106 +170,66 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
           <h3 className="text-lg font-bold text-slate-100 mb-4">Evidence Locker</h3>
           <div className="bg-black/20 rounded-xl p-6 border border-slate-700">
             <div className="space-y-4">
-              {data.evidence.length === 0 && (
-                <p className="text-center text-slate-500 py-4">No evidence uploaded yet.</p>
+              {evidence.length === 0 && (
+                <p className="text-center text-slate-500 py-4">
+                  No evidence uploaded yet. Drop files here to see the styling.
+                </p>
               )}
-              {data.evidence.map(file => {
-                const uniqueKey = file.id;
-                return (
-                  <div
-                    key={uniqueKey}
-                    className="bg-black/50 p-4 rounded-lg border border-slate-600 space-y-3"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-slate-200 break-all">{file.name}</p>
-                        <p className="text-xs text-slate-400">
-                          {(file.size / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          void removeEvidenceItem(uniqueKey);
-                        }}
-                        aria-label={`Remove ${file.name}`}
-                        className="text-slate-400 hover:text-red-400 transition-colors p-1 flex-shrink-0"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          <line x1="10" y1="11" x2="10" y2="17" />
-                          <line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                      </button>
+              {evidence.map(file => (
+                <div key={file.id} className="bg-black/50 p-4 rounded-lg border border-slate-600 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-slate-200 break-all">{file.name}</p>
+                      <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <select
-                        value={file.category}
-                        onChange={event =>
-                          updateEvidenceItem(uniqueKey, 'category', event.target.value)
-                        }
-                        className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                    <button
+                      onClick={() => removeEvidenceItem(file.id)}
+                      aria-label={`Remove ${file.name}`}
+                      className="text-slate-400 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       >
-                        {EVIDENCE_CATEGORIES.map(cat => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="Brief description of this file..."
-                        value={file.description}
-                        onChange={event =>
-                          updateEvidenceItem(uniqueKey, 'description', event.target.value)
-                        }
-                        className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
-                      />
-                    </div>
-                    {analysisState[uniqueKey] && (
-                      <div className="text-xs text-amber-300 flex items-center pt-2">
-                        <svg
-                          className="animate-spin h-4 w-4 mr-2"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        AI is analyzing file...
-                      </div>
-                    )}
-                    {file.aiAnalysis && !analysisState[uniqueKey] && (
-                      <div className="mt-2 pt-2 border-t border-slate-600/50">
-                        <p className="text-xs font-semibold text-amber-300">AI Analysis:</p>
-                        <p className="text-xs text-slate-300 italic">{file.aiAnalysis}</p>
-                      </div>
-                    )}
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <line x1="10" y1="11" x2="10" y2="17" />
+                        <line x1="14" y1="11" x2="14" y2="17" />
+                      </svg>
+                    </button>
                   </div>
-                );
-              })}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <select
+                      value={file.category}
+                      onChange={event => updateEvidenceItem(file.id, 'category', event.target.value)}
+                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                    >
+                      {EVIDENCE_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Brief description of this file..."
+                      value={file.description}
+                      onChange={event => updateEvidenceItem(file.id, 'description', event.target.value)}
+                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    This information is temporary and resets if you refresh the page.
+                  </p>
+                </div>
+              ))}
             </div>
 
             <div className="mt-6 pt-6 border-t border-slate-700/50">
@@ -221,7 +255,7 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
                 </svg>
                 <span>Click to Upload or Drag &amp; Drop</span>
                 <span className="text-xs text-slate-400 font-normal mt-1">
-                  Images, PDFs, Audio, or Video
+                  Images, PDFs, Audio, or Video (demo only)
                 </span>
               </label>
               <input

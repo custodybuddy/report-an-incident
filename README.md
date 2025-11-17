@@ -1,57 +1,72 @@
-# Overview
-This repository contains a Vite-powered React 19 single-page application that guides users through documenting an incident and generates AI-assisted reports.
+# Report an Incident
 
-## Running instructions emphasize installing dependencies, supplying a Gemini API key, and starting the dev server locally.
+Guided multi-step React wizard for documenting co-parenting incidents and generating polished AI summaries. Built with Vite + TypeScript and hardened for purely client-side operation.
 
-## Tooling & Configuration
-TypeScript compiler settings target modern browsers, enable React JSX transforms, and expose a @/* path alias for root-relative imports.
+## Features
 
-## Source Directory Structure
-### Core Application Flow
-src/App.tsx orchestrates the six-step reporting wizard: it renders structural components (header, navigation, footer), switches between step components, validates progress, and triggers AI summary generation plus export/print handlers once users reach the review step.
+- **Six-step wizard** covering consent, timeline, narrative, parties, evidence, and review. Every step exposes validation hints so users only advance with complete data.
+- **AI report generation** powered by OpenAI chat completions with JSON schema enforcement. The review step renders the AI output inside clearly separated cards and keeps the primary actions sticky for long reports.
+- **Evidence sandbox** that simulates uploads, tagging, and quick descriptions without persisting files to a backend.
+- **Accessibility-friendly UI** using semantic headings, keyboard-focusable controls, and high contrast dark theme tokens.
 
-## Step metadata (titles, icons, and option lists for parties, children, jurisdictions) lives in src/constants.ts, keeping wizard configuration centralized.
+## Getting Started
 
-## Shared Types
-types.ts defines the shapes for evidence attachments, incident data, AI-generated report payloads, modal metadata, and allowable evidence categories, ensuring consistent typing across components, hooks, and services.
+```bash
+npm install
+npm run dev
+```
 
-Components
-The src/components/steps/ directory contains dedicated UI for each wizard stage, such as Step0Consent for legal acknowledgments and Step5Review for presenting AI output, personal notes, and export actions.
+Visit `http://localhost:5173`.
 
-Shared UI elements (buttons, custom checkbox) and formatting utilities live under src/components/ui/, allowing reusable styling and behaviors across steps.
+### Environment Variables
 
-State Management
-src/hooks/useIncidentState.ts encapsulates wizard state, including persisted local storage hydration, validation per step, dirty-state tracking, and evidence cleanup when resetting the flow.
+Create `.env.local` (ignored by git) with the following keys:
 
-Services & Data Access
-src/services/geminiClient.ts centralizes Gemini API bootstrap, src/services/geminiPrompts/ contains the typed prompt builders and response schemas used across AI workflows, and src/services/evidenceAnalysis.ts focuses on media-specific handling for automated evidence reviews.
+```
+VITE_OPENAI_API_KEY=sk-YOUR-KEY
+# Optional: support alternate env naming
+OPENAI_API_KEY=sk-YOUR-KEY
+```
 
-src/services/evidenceStore.ts abstracts IndexedDB (with an in-memory fallback) for storing evidence blobs, exposing helpers to save, fetch, and delete records individually or in batches.
+The UI currently calls the OpenAI REST APIs directly from the browser. Use a proxy service if you need to hide keys in production.
 
-Reporting Utilities
-src/services/reportExport.ts composes AI outputs and incident metadata into printable/exportable HTML, presenting styled report sections, evidence logs, and resource lists before launching a new window or print dialog.
+### Available Scripts
 
-Together, these modules deliver a multi-step incident reporting workflow that persists user input, interacts with Gemini for analysis, and generates polished exports.
+| Command        | Description                                  |
+| -------------- | -------------------------------------------- |
+| `npm run dev`  | Start Vite dev server with fast refresh       |
+| `npm run build`| Production build (used by CI)                 |
+| `npm run preview` | Preview the production build locally      |
 
+## Project Structure
 
+```
+src/
+ ├─ App.tsx                  # Wizard orchestration
+ ├─ components/
+ │   ├─ Header/Footer/Nav    # Layout chrome
+ │   ├─ ProgressBar          # Step indicator
+ │   └─ steps/               # Per-step UI modules
+ ├─ services/
+ │   ├─ reportGenerator.ts   # Orchestrates OpenAI requests
+ │   └─ openAiInsights.ts    # Prompt builders and schema helpers
+ └─ types.ts                 # Shared domain types
+```
 
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+## UI Notes
 
-# Run and deploy your AI Studio app
+- Step 5 (Review) now uses dedicated card sections for “Incident Overview” and “AI Report Output” so AI-generated content doesn’t blend with raw data. The action bar stays sticky near the viewport bottom so users can regenerate without scrolling back.
+- Progress bar buttons clamp to the furthest validated step, preventing users from skipping required information.
 
-This contains everything you need to run your app locally.
+## Accessibility & Responsiveness
 
-View your app in AI Studio: https://ai.studio/apps/drive/1NCiWxVYkEIYAa6UWeanNl_LOyEFvW6D7
+- All major buttons and nav controls expose focus styles and ARIA labels for the embedded SVG icons.
+- Layouts rely on CSS grid/flex with responsive breakpoints (sm/md/lg) to keep content centered on both phones and desktops.
 
-## Run Locally
+## Contributing
 
-**Prerequisites:**  Node.js
+1. Fork / branch.
+2. `npm run dev` and make changes.
+3. `npm run build` before submitting PRs.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `  `
+Please open an issue if you encounter step validation bugs, accessibility gaps, or new jurisdictions to include.
