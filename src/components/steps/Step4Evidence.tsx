@@ -37,44 +37,53 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
-          <label
-            htmlFor="jurisdiction-select"
-            className="block text-sm font-semibold text-slate-300 mb-2"
-          >
-            Legal Jurisdiction <span className="text-amber-400">*</span>
-          </label>
-          <div className="relative">
-            <select
-              id="jurisdiction-select"
-              value={jurisdiction}
-              onChange={event => onJurisdictionChange(event.target.value)}
-              className="w-full appearance-none bg-slate-800/50 border-2 border-slate-600 rounded-xl px-4 py-3 text-slate-200 transition-all duration-300 focus:ring-4 focus:ring-amber-400/30 focus:border-amber-400 hover:border-amber-500"
-            >
-              <option value="">Select a jurisdiction...</option>
-              {JURISDICTIONS.map(name => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <div className="space-y-6">
+          <section className="rounded-2xl border border-slate-700/80 bg-slate-900/60 shadow-[0_20px_50px_-25px_rgba(0,0,0,0.65)] backdrop-blur-sm">
+            <div className="px-6 py-5 md:px-8 md:py-6 space-y-3">
+              <label
+                htmlFor="jurisdiction-select"
+                className="flex items-center text-sm font-semibold text-slate-100"
+              >
+                Legal Jurisdiction <span className="text-amber-300 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  id="jurisdiction-select"
+                  value={jurisdiction}
+                  onChange={event => onJurisdictionChange(event.target.value)}
+                  className="w-full appearance-none rounded-xl border-2 border-slate-600 bg-slate-800/70 px-4 py-3 text-slate-100 transition-all duration-300 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/25 hover:border-amber-500"
+                >
+                  <option value="">Select a jurisdiction...</option>
+                  {JURISDICTIONS.map(name => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </section>
 
-        <div>
-          <label htmlFor="case-number-input" className="block text-sm font-semibold text-slate-300 mb-2">
-            Case Number (Optional)
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              id="case-number-input"
-              value={caseNumber}
-              onChange={event => onCaseNumberChange(event.target.value)}
-              placeholder="e.g., F-12345-67"
-              className="w-full p-3 bg-slate-800/50 border-2 rounded-xl transition-all duration-300 shadow-sm text-slate-200 border-slate-600 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/30 hover:border-amber-500"
-            />
-          </div>
+          <section className="rounded-2xl border border-slate-700/80 bg-slate-900/60 shadow-[0_20px_50px_-25px_rgba(0,0,0,0.65)] backdrop-blur-sm">
+            <div className="px-6 py-5 md:px-8 md:py-6 space-y-3">
+              <label
+                htmlFor="case-number-input"
+                className="block text-sm font-semibold text-slate-100"
+              >
+                Case Number <span className="text-slate-400">(Optional)</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="case-number-input"
+                  value={caseNumber}
+                  onChange={event => onCaseNumberChange(event.target.value)}
+                  placeholder="e.g., F-12345-67"
+                  className="w-full rounded-xl border-2 border-slate-600 bg-slate-800/70 px-4 py-3 text-slate-100 transition-all duration-300 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/25 hover:border-amber-500"
+                />
+              </div>
+            </div>
+          </section>
         </div>
 
         <div>
