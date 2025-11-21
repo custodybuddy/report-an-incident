@@ -63,9 +63,36 @@ const fallbackNextSteps = {
   observedImpact: 'Impact analysis unavailable.',
 };
 
+const hasServerApiKey = (): boolean =>
+  typeof process !== 'undefined' &&
+  Boolean(process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY);
+
 export const generateIncidentReport = async (incident: IncidentData): Promise<ReportResult> => {
   if (isBrowser) {
     return requestViaProxy(incident);
+  }
+
+  if (!hasServerApiKey()) {
+    console.warn('Missing OpenAI API key; returning fallback incident report.');
+    return {
+      title: fallbackSummary.title,
+      professionalSummary: fallbackSummary.professionalSummary,
+      category: fallbackCategorization.category,
+      severity: fallbackCategorization.severity,
+      severityJustification: fallbackCategorization.severityJustification,
+      legalInsights: fallbackLegal.legalInsights,
+      sources: fallbackLegal.sources,
+      observedImpact: fallbackNextSteps.observedImpact,
+      communicationDraft: undefined,
+      promptContext: buildPromptContext(incident),
+      aiResponses: {
+        summary: fallbackSummary,
+        categorization: fallbackCategorization,
+        legal: fallbackLegal,
+        nextSteps: fallbackNextSteps,
+        communicationDraft: undefined,
+      },
+    };
   }
 
   const summaryPromise = withFallback(generateProfessionalSummary(incident), () => fallbackSummary);
