@@ -1,11 +1,8 @@
-import { createMarkdownFormatter } from '../../../utils/formatMarkdown';
+import { convertMarkdownToHtml } from '../../../utils/markdown';
 
-const formatReportMarkdown = createMarkdownFormatter({
-  paragraphClassName: 'mt-0 last:mb-0',
-  linkClassName: 'text-amber-400 hover:underline inline-flex items-center',
-  fallbackText: 'N/A',
-  fallbackClassName: 'mb-4 text-slate-500',
-});
+const FALLBACK_MARKUP = '<p class="mb-4 text-slate-500">N/A</p>';
 
-export const formatReportContent = (text: string | undefined | null): string =>
-  formatReportMarkdown(text);
+export const formatReportContent = (text: string | undefined | null): string => {
+  const html = convertMarkdownToHtml(text ?? '');
+  return html || FALLBACK_MARKUP;
+};

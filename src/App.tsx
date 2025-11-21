@@ -78,12 +78,6 @@ function App() {
     }
   }, [currentStep, maxAccessibleStep]);
 
-  useEffect(() => {
-    if (currentStep === 5 && reportResult) {
-      setCurrentStep(6);
-    }
-  }, [currentStep, reportResult]);
-
   const goToStep = useCallback(
     (step: number) => {
       setCurrentStep(Math.min(Math.max(step, 1), maxAccessibleStep));
@@ -171,6 +165,7 @@ function App() {
             onGenerateReport={handleGenerateReport}
             isGenerating={isGeneratingReport}
             hasReport={Boolean(reportResult)}
+            error={reportError}
           />
         );
       case 6:

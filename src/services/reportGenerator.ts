@@ -8,6 +8,34 @@ import {
   generateProfessionalSummary,
 } from './openAiInsights';
 
+const isBrowser = typeof window !== 'undefined';
+const getApiBaseUrl = () => {
+  const value =
+    typeof import.meta !== 'undefined' && import.meta.env?.VITE_REPORT_API_URL
+      ? import.meta.env.VITE_REPORT_API_URL
+      : '/api';
+  return value.replace(/\/$/, '');
+};
+
+const requestViaProxy = async (incident: IncidentData): Promise<ReportResult> => {
+  const response = await fetch(`${getApiBaseUrl()}/incident-report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(incident),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    const message: string =
+      typeof payload.error === 'string'
+        ? payload.error
+        : `Report generation failed (${response.status})`;
+    throw new Error(message);
+  }
+
+  return (await response.json()) as ReportResult;
+};
+
 const withFallback = <T>(promise: Promise<T>, fallback: () => T): Promise<T> =>
   promise.catch(error => {
     console.error('OpenAI helper failed:', error);
@@ -36,6 +64,10 @@ const fallbackNextSteps = {
 };
 
 export const generateIncidentReport = async (incident: IncidentData): Promise<ReportResult> => {
+  if (isBrowser) {
+    return requestViaProxy(incident);
+  }
+
   const summaryPromise = withFallback(generateProfessionalSummary(incident), () => fallbackSummary);
   const categorizationPromise = withFallback(generateCategorization(incident), () => fallbackCategorization);
   const legalPromise = withFallback(generateLegalInsights(incident), () => fallbackLegal);

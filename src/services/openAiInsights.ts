@@ -21,15 +21,16 @@ const getOpenAiApiKey = (): string => {
     typeof process !== 'undefined'
       ? process.env.OPENAI_API_KEY ?? process.env.VITE_OPENAI_API_KEY
       : undefined;
-  const clientKey = typeof import.meta !== 'undefined'
-    ? import.meta.env?.OPENAI_API_KEY ?? import.meta.env?.VITE_OPENAI_API_KEY
-    : undefined;
 
-  const apiKey = serverKey ?? clientKey;
-  if (!apiKey) {
+  if (typeof window !== 'undefined') {
+    throw new Error('OpenAI calls must be routed through a server; no API key is available in the browser.');
+  }
+
+  if (!serverKey) {
     throw new Error('Missing OpenAI API key. The key must be provided on the server.');
   }
-  return apiKey;
+
+  return serverKey;
 };
 
 const getClient = (() => {

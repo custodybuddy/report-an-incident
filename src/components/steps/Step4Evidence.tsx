@@ -15,6 +15,7 @@ interface Step4EvidenceProps {
   onGenerateReport: () => void;
   isGenerating: boolean;
   hasReport: boolean;
+  error?: string | null;
 }
 
 const Step4Evidence: React.FC<Step4EvidenceProps> = ({
@@ -27,6 +28,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
   onGenerateReport,
   isGenerating,
   hasReport,
+  error,
 }) => {
   const { handleFileChange, removeEvidenceItem, updateEvidenceItem } = useEvidenceList({
     evidence,
@@ -194,6 +196,15 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-end">
+          {error && (
+            <div
+              className="w-full sm:w-auto rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+              role="status"
+              aria-live="polite"
+            >
+              {error}
+            </div>
+          )}
           {isGenerating && (
             <div className="flex items-center gap-2 text-sm text-amber-200">
               <span className="h-2 w-2 rounded-full bg-amber-300 animate-pulse" />
