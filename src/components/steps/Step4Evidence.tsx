@@ -3,6 +3,7 @@ import { EVIDENCE_CATEGORIES, JURISDICTIONS } from '../../config/evidence';
 import useEvidenceList from '../../hooks/useEvidenceList';
 import type { EvidenceItem } from '../../types';
 import H2 from '../ui/H2';
+import Button from '../ui/Button';
 
 interface Step4EvidenceProps {
   jurisdiction: string;
@@ -11,6 +12,9 @@ interface Step4EvidenceProps {
   onJurisdictionChange: (value: string) => void;
   onCaseNumberChange: (value: string) => void;
   onEvidenceChange: (items: EvidenceItem[]) => void;
+  onGenerateReport: () => void;
+  isGenerating: boolean;
+  hasReport: boolean;
 }
 
 const Step4Evidence: React.FC<Step4EvidenceProps> = ({
@@ -20,6 +24,9 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
   onJurisdictionChange,
   onCaseNumberChange,
   onEvidenceChange,
+  onGenerateReport,
+  isGenerating,
+  hasReport,
 }) => {
   const { handleFileChange, removeEvidenceItem, updateEvidenceItem } = useEvidenceList({
     evidence,
@@ -31,13 +38,13 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
       <div className="text-center mb-8">
         <H2 className="text-3xl font-bold text-[#FFD700] mb-2">Jurisdiction &amp; Evidence</H2>
         <p className="text-slate-400 max-w-lg mx-auto">
-          This screen mirrors the production styling but drops the AI + storage wiring. Uploading
-          files here only updates local state.
+          Confirm your jurisdiction, optional case number, and attach evidence. When ready, generate
+          the AI report before moving to review.
         </p>
       </div>
 
       <div className="max-w-4xl mx-auto space-y-8">
-        <div>
+        <div className="space-y-4">
           <label
             htmlFor="jurisdiction-select"
             className="block text-sm font-semibold text-slate-300 mb-2"
@@ -61,7 +68,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
           </div>
         </div>
 
-        <div>
+        <div className="space-y-4">
           <label htmlFor="case-number-input" className="block text-sm font-semibold text-slate-300 mb-2">
             Case Number (Optional)
           </label>
@@ -77,7 +84,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
           </div>
         </div>
 
-        <div>
+        <div className="space-y-4">
           <h3 className="text-lg font-bold text-slate-100 mb-4">Evidence Locker</h3>
           <div className="bg-black/20 rounded-2xl p-6 border border-slate-700 shadow-xl shadow-amber-500/10 space-y-6">
             <div className="space-y-4">
@@ -184,6 +191,22 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
               </article>
             </section>
           </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-end">
+          {isGenerating && (
+            <div className="flex items-center gap-2 text-sm text-amber-200">
+              <span className="h-2 w-2 rounded-full bg-amber-300 animate-pulse" />
+              Generating report...
+            </div>
+          )}
+          <Button
+            className="w-full sm:w-auto"
+            onClick={onGenerateReport}
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : 'Generate AI Report'}
+          </Button>
         </div>
       </div>
     </div>

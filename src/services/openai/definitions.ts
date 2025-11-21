@@ -24,7 +24,7 @@ export const SCHEMAS: Record<
         professionalSummary: {
           type: 'string',
           description:
-            'A detailed, objective summary written in the third person, spanning 2-3 paragraphs. The first paragraph must establish the context (date, time, parties). The second must chronologically detail the key factual events—what was said and done by each party. The final paragraph must state the outcome or resolution of the immediate incident. Use newline characters (\\n) to separate paragraphs. Strictly adhere to factual reporting.',
+            "Two paragraphs. Paragraph 1: A concise, objective summary (2-3 sentences) starting with 'On <DATE>, a <SEVERITY>-severity <INCIDENT TYPE> occurred when…' using the provided date, severity, and classification; include key factual actions and the immediate outcome/impact. Paragraph 2: Name the core legislation relevant to the user’s jurisdiction (e.g., Family Law Act, Divorce Act, or analogous state/provincial acts) and state in one sentence how it relates to decision-making, best interests of the child, or compliance duties. Avoid legal advice; keep it factual and cite acts by name only.",
         },
       },
       required: ['title', 'professionalSummary'],
@@ -134,7 +134,7 @@ export const PROMPTS = {
 
 ${context}
 
-Analyze the incident and generate a JSON object that strictly adheres to the provided schema. Structure the summary into three distinct paragraphs: 1) Context, 2) Chronology of Events, 3) Outcome.`,
+Analyze the incident and generate a JSON object that strictly adheres to the provided schema. Write the professional summary in TWO paragraphs: (1) a single paragraph (2-3 sentences) starting exactly with: "On <DATE>, a <SEVERITY>-severity <INCIDENT TYPE> occurred when..." followed by the specific factual actions by each party and the immediate outcome/impact; (2) a single sentence naming the key legislation for the user's jurisdiction (e.g., Family Law Act, Divorce Act, or a comparable state/provincial act) and noting how it frames decision-making, best interests, or compliance. Do not give legal advice; cite acts by name only.`,
   categorization: (context: string) => `You are an AI trained in family law case classification. Your task is to analyze and classify the co-parenting incident below.
 
 ${context}

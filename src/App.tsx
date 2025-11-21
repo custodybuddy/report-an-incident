@@ -56,8 +56,9 @@ function App() {
       [3, incidentData.narrative.trim().length >= 100],
       [4, incidentData.parties.length > 0],
       [5, Boolean(incidentData.jurisdiction)],
+      [6, Boolean(reportResult)],
     ],
-    [incidentData]
+    [incidentData, reportResult]
   );
 
   const maxAccessibleStep = useMemo(() => {
@@ -76,6 +77,12 @@ function App() {
       setCurrentStep(maxAccessibleStep);
     }
   }, [currentStep, maxAccessibleStep]);
+
+  useEffect(() => {
+    if (currentStep === 5 && reportResult) {
+      setCurrentStep(6);
+    }
+  }, [currentStep, reportResult]);
 
   const goToStep = useCallback(
     (step: number) => {
@@ -161,6 +168,9 @@ function App() {
             onJurisdictionChange={value => updateIncidentData('jurisdiction', value)}
             onCaseNumberChange={value => updateIncidentData('caseNumber', value)}
             onEvidenceChange={items => updateIncidentData('evidence', items)}
+            onGenerateReport={handleGenerateReport}
+            isGenerating={isGeneratingReport}
+            hasReport={Boolean(reportResult)}
           />
         );
       case 6:
@@ -168,22 +178,14 @@ function App() {
           <Step5Review
             incidentData={incidentData}
             reportResult={reportResult}
-            isGenerating={isGeneratingReport}
-            error={reportError}
-            onGenerateReport={handleGenerateReport}
             onReset={resetWizard}
+            onPrev={handlePrevStep}
           />
         );
       default:
         return null;
     }
-  }, [
-    currentStep,
-    incidentData,
-    reportResult,
-    isGeneratingReport,
-    reportError,
-  ]);
+  }, [currentStep, incidentData, reportResult, isGeneratingReport, reportError]);
 
   return (
     <>

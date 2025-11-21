@@ -137,20 +137,34 @@ const combineSignalWithTimeout = (
 };
 
 export const createOpenAIClient = (config: OpenAIClientConfig) => {
-  const chatUrl = config.chatUrl ?? DEFAULT_CHAT_URL;
-  const responsesUrl = config.responsesUrl ?? DEFAULT_RESPONSES_URL;
-  const fetchImpl = config.fetchImpl ?? fetch;
+  const fetchImpl = (...args: Parameters<typeof fetch>) => (config.fetchImpl ?? fetch)(...args);
+
+  const resolvedConfig = {
+    chatUrl: config.chatUrl ?? DEFAULT_CHAT_URL,
+    responsesUrl: config.responsesUrl ?? DEFAULT_RESPONSES_URL,
+    defaultModel: config.defaultModel,
+    webModel: config.webModel,
+    temperature: config.temperature ?? DEFAULT_TEMPERATURE,
+    fetchImpl,
+  };
+
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${config.apiKey}`,
+  };
+
+  const withDefaults = (model?: string, temperature?: number, modelFallback?: string) => ({
+    model: model ?? modelFallback ?? resolvedConfig.defaultModel,
+    temperature: temperature ?? resolvedConfig.temperature,
+  });
 
   const execute = async (url: string, body: Record<string, unknown>, options?: OpenAIRequestOptions) => {
     const { signal, cleanup, timedOut } = combineSignalWithTimeout(options);
 
     try {
-      const response = await fetchImpl(url, {
+      const response = await resolvedConfig.fetchImpl(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.apiKey}`,
-        },
+        headers: defaultHeaders,
         body: JSON.stringify(body),
         signal,
       });
@@ -187,10 +201,9 @@ export const createOpenAIClient = (config: OpenAIClientConfig) => {
     options?: OpenAIRequestOptions
   ): Promise<string> => {
     const json = await execute(
-      chatUrl,
+      resolvedConfig.chatUrl,
       {
-        model: payload.model ?? config.defaultModel,
-        temperature: payload.temperature ?? config.temperature ?? DEFAULT_TEMPERATURE,
+        ...withDefaults(payload.model, payload.temperature),
         messages: payload.messages,
         ...(payload.response_format ? { response_format: payload.response_format } : {}),
       },
@@ -232,20 +245,18 @@ export const createOpenAIClient = (config: OpenAIClientConfig) => {
     },
     options?: OpenAIRequestOptions
   ): Promise<T> => {
-    const json = await execute(
-      responsesUrl,
+    const messages: OpenAIMessage[] = [{ role: 'user', content: payload.prompt }];
+    const text = await chatText(
       {
-        model: payload.model ?? config.webModel,
-        temperature: payload.temperature ?? config.temperature ?? DEFAULT_TEMPERATURE,
-        tools: payload.tools,
+        messages,
+        model: payload.model ?? resolvedConfig.webModel,
+        temperature: payload.temperature,
         response_format: { type: 'json_schema', json_schema: payload.schema },
-        input: payload.prompt,
       },
       options
     );
 
-    const text = extractResponseOutput(json);
-    return parseJson<T>(text, 'OpenAI web search response was not valid JSON.');
+    return parseJson<T>(text, 'OpenAI response was not valid JSON.');
   };
 
   return {
