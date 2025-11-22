@@ -109,9 +109,9 @@ function App() {
     setCurrentStep(prev => Math.min(maxAccessibleStep, prev + 1));
   }, [maxAccessibleStep]);
 
-  const handleStartNewReport = () => {
+  const handleStartNewReport = useCallback(() => {
     resetWizard();
-  };
+  }, [resetWizard]);
 
   const handleRestoreDraft = useCallback(() => {
     if (!storedDraft) {

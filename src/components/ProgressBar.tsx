@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import type { StepMeta } from '../ui/steps';
 
 interface ProgressBarProps {
@@ -59,4 +59,4 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep 
   );
 };
 
-export default ProgressBar;
+export default memo(ProgressBar);

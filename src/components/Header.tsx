@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import H1 from './ui/H1';
 import { SITE_LINKS } from '../config/links';
 
@@ -62,4 +62,4 @@ const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
   );
 };
 
-export default Header;
+export default memo(Header);
