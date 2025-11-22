@@ -48,10 +48,22 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep 
                 className={`relative flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-500 cursor-pointer ${iconClasses}`}
                 aria-label={`Go to step ${step.number}: ${step.title}`}
               >
+                <span
+                  className={`absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-colors duration-300 ${
+                    isCompleted
+                      ? 'bg-white/90 text-emerald-700'
+                      : isActive
+                        ? 'bg-amber-900/70 text-amber-100'
+                        : 'bg-slate-900/70 text-slate-200'
+                  }`}
+                >
+                  {step.number}
+                </span>
                 {isCompleted ? <CheckIcon /> : <Icon className="w-5 h-5" />}
               </button>
-              <div className="mt-2 text-center max-w-full">
-                <p className={`text-xs font-semibold transition-colors duration-300 ${textClasses} truncate`}>
+              <div className="mt-2 text-center max-w-full space-y-0.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Step {step.number}</p>
+                <p className={`text-sm font-semibold transition-colors duration-300 ${textClasses}`}>
                   {step.title}
                 </p>
               </div>
