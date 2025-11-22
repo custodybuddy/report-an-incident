@@ -14,7 +14,7 @@ const navLinks = [
 const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
   return (
     <header className="bg-black/40 backdrop-blur-md shadow-2xl border-b border-white/10 sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-6 py-4">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4 md:gap-6">
             <div className="relative w-12 h-12 bg-slate-800/50 border border-amber-400/30 rounded-xl flex items-center justify-center shadow-2xl transform hover:rotate-6 transition-transform duration-500">
