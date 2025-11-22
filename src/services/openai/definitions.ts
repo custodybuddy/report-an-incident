@@ -96,8 +96,15 @@ export const SCHEMAS: Record<
           description:
             'A 1-2 paragraph analysis of the potential or observed impact on the children, based strictly on the information provided in the narrative. Use newline characters (\\n) for paragraph breaks.',
         },
+        aiNotes: {
+          type: 'string',
+          description:
+            'Markdown notes containing exactly three sections with level-2 headings: "## What I Notice" (2-3 concise, neutral bullet points grounded in the narrative), "## Co-Parenting Guidance" (2-3 child-centered, de-escalating bullet points), and "## Documentation & Safety Reminders" (2-3 bullet points focused on record-keeping and wellbeing). Do not include legal advice or duplicate the observedImpact text.',
+          pattern:
+            '^## What I Notice\\n[\\s\\S]+## Co-Parenting Guidance\\n[\\s\\S]+## Documentation & Safety Reminders\\n[\\s\\S]+'
+        },
       },
-      required: ['observedImpact'],
+      required: ['observedImpact', 'aiNotes'],
     },
   },
 };
@@ -154,7 +161,7 @@ Provide legal insights specific to family law in ${jurisdiction || 'the stated j
 
 ${context}
 
-Analyze the potential impact on the children based only on the provided narrative. Generate a JSON object that strictly adheres to the schema.`,
+Analyze the potential impact on the children based only on the provided narrative. Generate a JSON object that strictly adheres to the schema. Provide two fields: (1) observedImpact as 1-2 short paragraphs focused solely on child wellbeing; (2) aiNotes as a markdown string with exactly three sections and headings: "## What I Notice" (2-3 bullets highlighting neutral observations), "## Co-Parenting Guidance" (2-3 de-escalating, child-centered bullets), and "## Documentation & Safety Reminders" (2-3 bullets on records and wellbeing). Do not repeat the observedImpact verbatim and do not provide legal advice.`,
   communicationDraft: (objectiveNarrative: string, date: string, time: string) => `Draft a documentation message based on the following objective report:
 
 ${objectiveNarrative}

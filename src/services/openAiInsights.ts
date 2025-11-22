@@ -469,7 +469,7 @@ export const generateLegalInsights = async (
 export const generateNextSteps = async (
   incidentData: IncidentData,
   options?: OpenAIRequestOptions
-): Promise<{ observedImpact: string }> => {
+): Promise<{ observedImpact: string; aiNotes: string }> => {
   const context = buildPromptContext(incidentData);
   return callChatJson(
     {

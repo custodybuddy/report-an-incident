@@ -25,6 +25,14 @@ const reportResult: ReportResult = {
   legalInsights: 'Family Law Act applies.',
   sources: ['https://www.ontario.ca/laws/statute/90f03'],
   observedImpact: 'Stress',
+  aiNotes: `## What I Notice
+- Observation one
+
+## Co-Parenting Guidance
+- Keep communication neutral
+
+## Documentation & Safety Reminders
+- Save related messages`,
 };
 
 let originalOpen: typeof window.open;

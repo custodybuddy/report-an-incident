@@ -35,6 +35,7 @@ export interface ReportResult {
   sources: string[];
   legalCitations?: Citation[];
   observedImpact: string;
+  aiNotes: string;
   communicationDraft?: string;
   promptContext?: string;
   aiResponses?: {
@@ -54,6 +55,7 @@ export interface ReportResult {
     };
     nextSteps?: {
       observedImpact: string;
+      aiNotes: string;
     };
     communicationDraft?: string;
   };

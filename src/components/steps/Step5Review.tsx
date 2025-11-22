@@ -22,6 +22,61 @@ interface SectionProps {
   renderHtml?: boolean;
 }
 
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const formatAiNotes = (notes: string): string => {
+  if (!notes.trim()) {
+    return '';
+  }
+
+  const lines = notes.split(/\r?\n/);
+  const chunks: string[] = [];
+  let inList = false;
+
+  const closeList = () => {
+    if (inList) {
+      chunks.push('</ul>');
+      inList = false;
+    }
+  };
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith('## ')) {
+      closeList();
+      const heading = escapeHtml(trimmed.replace(/^##\s*/, ''));
+      chunks.push(`<h3 class="text-base font-semibold text-amber-200">${heading}</h3>`);
+      return;
+    }
+
+    if (trimmed.startsWith('- ')) {
+      if (!inList) {
+        chunks.push('<ul class="list-disc space-y-2 pl-5">');
+        inList = true;
+      }
+      const bullet = escapeHtml(trimmed.replace(/^-\s*/, ''));
+      chunks.push(`<li class="text-sm leading-relaxed text-slate-100">${bullet}</li>`);
+      return;
+    }
+
+    if (trimmed) {
+      closeList();
+      chunks.push(`<p class="text-sm leading-relaxed text-slate-100">${escapeHtml(trimmed)}</p>`);
+    }
+  });
+
+  closeList();
+
+  return chunks.join('');
+};
+
 const Section: React.FC<SectionProps> = ({
   title,
   content,
@@ -97,6 +152,11 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
     [classificationDisplay, incidentData.date, reportResult, severityDisplay],
   );
 
+  const formattedAiNotes = useMemo(
+    () => (reportResult?.aiNotes ? formatAiNotes(reportResult.aiNotes) : ''),
+    [reportResult?.aiNotes]
+  );
+
   const handleExportPdf = () => {
     setExportError(null);
     const content = reportRef.current?.innerHTML ?? '';
@@ -158,6 +218,20 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
               title="Professional Summary"
               content={normalizedProfessionalSummary}
               treatAsParagraphs
+              headingLevel="h2"
+            />
+
+            <Section
+              title="Observed/Projected Impact on Children"
+              content={reportResult.observedImpact}
+              treatAsParagraphs
+              headingLevel="h2"
+            />
+
+            <Section
+              title="AI Notes & Guidance"
+              content={formattedAiNotes}
+              renderHtml
               headingLevel="h2"
             />
 
