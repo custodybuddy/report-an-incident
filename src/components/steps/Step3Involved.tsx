@@ -10,6 +10,21 @@ import {
   listStack,
 } from '../ui/layoutTokens';
 
+interface InvolvementSectionProps {
+  title: string;
+  items: string[];
+  selectedItems: string[];
+  onSelectionChange: (items: string[]) => void;
+  customInputPlaceholder: string;
+}
+
+interface Step3InvolvedProps {
+  parties: string[];
+  children: string[];
+  onPartiesChange: (items: string[]) => void;
+  onChildrenChange: (items: string[]) => void;
+}
+
 const PREDEFINED_PARTIES = [
   'Co-Parent',
   'Grandparent',
@@ -25,14 +40,6 @@ const PREDEFINED_CHILDREN = [
   'Stepchild',
   'Family Friend',
 ];
-
-interface InvolvementSectionProps {
-  title: string;
-  items: string[];
-  selectedItems: string[];
-  onSelectionChange: (items: string[]) => void;
-  customInputPlaceholder: string;
-}
 
 const InvolvementSection: React.FC<InvolvementSectionProps> = ({
   title,
@@ -138,13 +145,6 @@ const InvolvementSection: React.FC<InvolvementSectionProps> = ({
     </div>
   );
 };
-
-interface Step3InvolvedProps {
-  parties: string[];
-  children: string[];
-  onPartiesChange: (items: string[]) => void;
-  onChildrenChange: (items: string[]) => void;
-}
 
 const Step3Involved: React.FC<Step3InvolvedProps> = ({
   parties,

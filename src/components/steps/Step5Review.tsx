@@ -17,13 +17,21 @@ interface Step5ReviewProps {
   onPrev: () => void;
 }
 
-const Section: React.FC<{
+interface SectionProps {
   title: string;
   content: string | string[];
   treatAsParagraphs?: boolean;
   headingLevel?: 'h2' | 'p';
   renderHtml?: boolean;
-}> = ({ title, content, treatAsParagraphs = false, headingLevel = 'p', renderHtml = false }) => {
+}
+
+const Section: React.FC<SectionProps> = ({
+  title,
+  content,
+  treatAsParagraphs = false,
+  headingLevel = 'p',
+  renderHtml = false,
+}) => {
   if (!content || (Array.isArray(content) && !content.length)) {
     return null;
   }
