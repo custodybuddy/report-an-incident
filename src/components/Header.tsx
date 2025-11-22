@@ -27,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ onCreateNewReport }) => {
             <div>
               <H1 className="!text-left text-lg sm:text-xl font-black tracking-tight text-[#FFD700]">
                 Report An Incident:{' '}
-                <span className="text-white font-raleway font-medium">Catch Them&nbsp;Red-Handed.</span>
+                <span className="text-white font-raleway font-medium break-words">Catch Them Red-Handed.</span>
               </H1>
               <p className="text-xs text-slate-300 mt-1 font-medium hidden sm:block">
                 Transform toxic behavior into court-ready evidence with guided documentation.
