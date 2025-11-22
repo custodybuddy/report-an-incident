@@ -92,6 +92,9 @@ function App() {
     // incomplete step, preventing users from skipping ahead in the wizard.
     for (const [step, isValid] of stepValidationEntries) {
       if (!isValid) {
+        if (step === STEPS.length) {
+          maxStep = Math.min(maxStep, STEPS.length - 1);
+        }
         break;
       }
       maxStep = Math.min(step + 1, STEPS.length);
@@ -107,9 +110,10 @@ function App() {
 
   const goToStep = useCallback(
     (step: number) => {
-      setCurrentStep(Math.min(Math.max(step, 1), maxAccessibleStep));
+      const gatedMaxStep = !reportResult ? Math.min(maxAccessibleStep, STEPS.length - 1) : maxAccessibleStep;
+      setCurrentStep(Math.min(Math.max(step, 1), gatedMaxStep));
     },
-    [maxAccessibleStep]
+    [maxAccessibleStep, reportResult]
   );
 
   const handlePrevStep = useCallback(() => {
@@ -117,8 +121,9 @@ function App() {
   }, []);
 
   const handleNextStep = useCallback(() => {
-    setCurrentStep(prev => Math.min(maxAccessibleStep, prev + 1));
-  }, [maxAccessibleStep]);
+    const gatedMaxStep = !reportResult ? Math.min(maxAccessibleStep, STEPS.length - 1) : maxAccessibleStep;
+    setCurrentStep(prev => Math.min(gatedMaxStep, prev + 1));
+  }, [maxAccessibleStep, reportResult]);
 
   const handleStartNewReport = useCallback(() => {
     resetWizard();
