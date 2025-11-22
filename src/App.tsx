@@ -20,6 +20,7 @@ function App() {
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [generationController, setGenerationController] = useState<AbortController | null>(null);
 
   const clearGeneratedReport = useCallback(() => {
     setReportResult(null);
@@ -118,21 +119,48 @@ function App() {
     if (isGeneratingReport) {
       return;
     }
+    const controller = new AbortController();
+    setGenerationController(controller);
     setIsGeneratingReport(true);
     setReportError(null);
     try {
       if (typeof window !== 'undefined') {
         assertApiBaseUrl();
       }
-      const result = await generateIncidentReport(incidentData);
+      const result = await generateIncidentReport(incidentData, controller.signal);
       setReportResult(result);
     } catch (error) {
-      setReportError(
-        error instanceof Error ? error.message : 'Unable to generate report. Please try again.'
-      );
+      const wasAborted = controller.signal.aborted;
+      const reason = controller.signal.reason;
+      const isTimeout = reason instanceof DOMException && reason.name === 'TimeoutError';
+
+      if (wasAborted) {
+        setReportError(
+          isTimeout
+            ? 'Report generation timed out. Please try again.'
+            : 'Report generation was canceled. You can try again.'
+        );
+      } else {
+        setReportError(
+          error instanceof Error ? error.message : 'Unable to generate report. Please try again.'
+        );
+      }
     } finally {
       setIsGeneratingReport(false);
+      setGenerationController(null);
     }
+  };
+
+  const handleCancelGeneration = () => {
+    setReportError(null);
+    setReportResult(null);
+    const controller = generationController;
+    if (controller && !controller.signal.aborted) {
+      controller.abort(new DOMException('Canceled by user', 'AbortError'));
+    } else {
+      setIsGeneratingReport(false);
+    }
+    setGenerationController(null);
   };
 
   const canProceed = useMemo(() => {
@@ -183,6 +211,7 @@ function App() {
             onCaseNumberChange={value => updateIncidentData('caseNumber', value)}
             onEvidenceChange={items => updateIncidentData('evidence', items)}
             onGenerateReport={handleGenerateReport}
+            onCancelGeneration={handleCancelGeneration}
             isGenerating={isGeneratingReport}
             hasReport={Boolean(reportResult)}
             error={reportError}

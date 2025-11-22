@@ -11,23 +11,54 @@ import { assertApiBaseUrl } from './apiConfig';
 
 const isBrowser = typeof window !== 'undefined';
 
-const requestViaProxy = async (incident: IncidentData): Promise<ReportResult> => {
-  const response = await fetch(`${assertApiBaseUrl()}/incident-report`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(incident),
-  });
+const REQUEST_TIMEOUT_MS = 25_000;
 
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    const message: string =
-      typeof payload.error === 'string'
-        ? payload.error
-        : `Report generation failed (${response.status})`;
-    throw new Error(message);
+const requestViaProxy = async (
+  incident: IncidentData,
+  signal?: AbortSignal
+): Promise<ReportResult> => {
+  const abortController = new AbortController();
+  const abortHandler = () =>
+    abortController.abort(signal?.reason ?? new DOMException('Aborted', 'AbortError'));
+
+  signal?.addEventListener('abort', abortHandler);
+
+  const timeoutId = setTimeout(
+    () => abortController.abort(new DOMException('Request timed out', 'TimeoutError')),
+    REQUEST_TIMEOUT_MS
+  );
+
+  try {
+    const response = await fetch(`${assertApiBaseUrl()}/incident-report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(incident),
+      signal: abortController.signal,
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      const message: string =
+        typeof payload.error === 'string'
+          ? payload.error
+          : `Report generation failed (${response.status})`;
+      throw new Error(message);
+    }
+
+    return (await response.json()) as ReportResult;
+  } catch (error) {
+    if (abortController.signal.aborted) {
+      const reason = abortController.signal.reason;
+      if (reason instanceof DOMException && reason.name === 'TimeoutError') {
+        throw new Error('Report generation timed out. Please try again.');
+      }
+      throw new Error('Report generation was canceled. Please try again.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+    signal?.removeEventListener('abort', abortHandler);
   }
-
-  return (await response.json()) as ReportResult;
 };
 
 const withFallback = <T>(promise: Promise<T>, fallback: () => T): Promise<T> =>
@@ -62,9 +93,12 @@ const hasServerApiKey = (): boolean =>
   typeof process !== 'undefined' &&
   Boolean(process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY);
 
-export const generateIncidentReport = async (incident: IncidentData): Promise<ReportResult> => {
+export const generateIncidentReport = async (
+  incident: IncidentData,
+  signal?: AbortSignal
+): Promise<ReportResult> => {
   if (isBrowser) {
-    return requestViaProxy(incident);
+    return requestViaProxy(incident, signal);
   }
 
   if (!hasServerApiKey()) {
