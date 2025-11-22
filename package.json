@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node --loader ./ts-node-loader.mjs server/openai-proxy.ts",
-    "test": "vitest"
+    "test": "node --loader ./ts-node-loader.mjs --test src/utils/dateTime.test.ts"
   },
   "dependencies": {
     "react": "^19.2.0",
