@@ -4,7 +4,11 @@ import type { EvidenceItem } from '../types';
 
 type FileRejectionReason = 'type' | 'size';
 
-type EvidenceUpdateKey = 'category' | 'description';
+export type EvidenceUpdateKey = 'category' | 'description';
+
+export type EvidenceChangeHandler =
+  | EvidenceItem[]
+  | ((previous: EvidenceItem[]) => EvidenceItem[]);
 
 export interface FileRejection {
   file: File;
@@ -19,7 +23,7 @@ export interface FileValidationResult {
 
 interface UseEvidenceListParams {
   evidence: EvidenceItem[];
-  onEvidenceChange: (items: EvidenceItem[]) => void;
+  onEvidenceChange: (itemsOrUpdater: EvidenceChangeHandler) => void;
   defaultCategory?: string;
   allowedMimeTypes?: string[];
   maxFileSizeBytes?: number;
@@ -30,7 +34,7 @@ export const DEFAULT_ALLOWED_EVIDENCE_TYPES = ['image/', 'application/pdf', 'aud
 export const DEFAULT_MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB
 
 const useEvidenceList = ({
-  evidence,
+  evidence: _evidence,
   onEvidenceChange,
   defaultCategory = DEFAULT_EVIDENCE_CATEGORY,
   allowedMimeTypes = DEFAULT_ALLOWED_EVIDENCE_TYPES,
@@ -76,27 +80,29 @@ const useEvidenceList = ({
       );
 
       if (result.added.length > 0) {
-        onEvidenceChange([...evidence, ...result.added]);
+        onEvidenceChange(previous => [...previous, ...result.added]);
       }
 
       onValidationResult?.(result);
       return result;
     },
-    [allowedMimeTypes, defaultCategory, evidence, maxFileSizeBytes, onEvidenceChange, onValidationResult],
+    [allowedMimeTypes, defaultCategory, maxFileSizeBytes, onEvidenceChange, onValidationResult],
   );
 
   const updateEvidenceItem = useCallback(
     (id: string, key: EvidenceUpdateKey, value: string) => {
-      onEvidenceChange(evidence.map(item => (item.id === id ? { ...item, [key]: value } : item)));
+      onEvidenceChange(previous =>
+        previous.map(item => (item.id === id ? { ...item, [key]: value } : item)),
+      );
     },
-    [evidence, onEvidenceChange],
+    [onEvidenceChange],
   );
 
   const removeEvidenceItem = useCallback(
     (id: string) => {
-      onEvidenceChange(evidence.filter(item => item.id !== id));
+      onEvidenceChange(previous => previous.filter(item => item.id !== id));
     },
-    [evidence, onEvidenceChange],
+    [onEvidenceChange],
   );
 
   const handleFileChange: ChangeEventHandler<HTMLInputElement> = useCallback(

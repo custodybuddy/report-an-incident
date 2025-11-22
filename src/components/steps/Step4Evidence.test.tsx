@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import Step4Evidence from './Step4Evidence';
 import type { EvidenceItem } from '../../types';
-import { DEFAULT_MAX_FILE_SIZE_BYTES } from '../../hooks/useEvidenceList';
+import { DEFAULT_MAX_FILE_SIZE_BYTES, type EvidenceChangeHandler } from '../../hooks/useEvidenceList';
 
 type StepWrapperProps = { initialEvidence?: EvidenceItem[] };
 
 const StepWrapper: React.FC<StepWrapperProps> = ({ initialEvidence = [] }) => {
   const [evidence, setEvidence] = useState<EvidenceItem[]>(initialEvidence);
-  const handleEvidenceChange = (items: EvidenceItem[]) => setEvidence(items);
+  const handleEvidenceChange = (items: EvidenceChangeHandler) => {
+    setEvidence(prev => (typeof items === 'function' ? items(prev) : items));
+  };
 
   return (
     <Step4Evidence
