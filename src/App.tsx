@@ -48,15 +48,17 @@ function App() {
   }, []);
 
   const updateIncidentData = useCallback(
-    <K extends keyof IncidentData>(key: K, value: IncidentData[K]) => {
+    <K extends keyof IncidentData>(key: K, value: IncidentData[K] | ((previous: IncidentData[K]) => IncidentData[K])) => {
       setIncidentData(prev => {
-        if (prev[key] === value) {
+        const nextValue = typeof value === 'function' ? (value as (previousValue: IncidentData[K]) => IncidentData[K])(prev[key]) : value;
+
+        if (prev[key] === nextValue) {
           return prev;
         }
         clearGeneratedReport();
         return {
           ...prev,
-          [key]: value,
+          [key]: nextValue,
         };
       });
     },
