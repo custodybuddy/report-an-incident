@@ -1,5 +1,9 @@
 import type { IncidentData } from '../../types';
-import type { JsonSchemaDefinition } from './client';
+
+export interface JsonSchemaDefinition {
+  name: string;
+  schema: Record<string, unknown>;
+}
 import { formatDate, formatTime } from '../../utils/dateTime';
 
 export const OPENAI_MODELS = {
