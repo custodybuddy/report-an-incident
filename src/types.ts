@@ -6,6 +6,13 @@ export interface EvidenceItem {
   description: string;
 }
 
+export interface Citation {
+  url: string;
+  title?: string;
+  start_index?: number;
+  end_index?: number;
+}
+
 export interface IncidentData {
   consentAcknowledged: boolean;
   date: string;
@@ -26,6 +33,7 @@ export interface ReportResult {
   severityJustification: string;
   legalInsights: string;
   sources: string[];
+  legalCitations?: Citation[];
   observedImpact: string;
   communicationDraft?: string;
   promptContext?: string;
@@ -42,6 +50,7 @@ export interface ReportResult {
     legal?: {
       legalInsights: string;
       sources: string[];
+      citations?: Citation[];
     };
     nextSteps?: {
       observedImpact: string;

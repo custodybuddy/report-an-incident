@@ -2,6 +2,7 @@ import type { IncidentData } from '../types';
 import {
   createOpenAIClient,
   OpenAIClientError,
+  type ResponseJsonResult,
   type MessageContent,
   type OpenAIMessage,
   type OpenAIRequestOptions,
@@ -15,6 +16,100 @@ export interface EvidenceFile {
   base64: string;
   description?: string;
 }
+
+const normalizeJurisdiction = (value: string): string => value.trim().toLowerCase();
+
+const COUNTRY_FROM_JURISDICTION: Record<string, { country: string; region?: string }> = {
+  // Canada
+  'alberta': { country: 'CA', region: 'Alberta' },
+  'british columbia': { country: 'CA', region: 'British Columbia' },
+  'manitoba': { country: 'CA', region: 'Manitoba' },
+  'new brunswick': { country: 'CA', region: 'New Brunswick' },
+  'newfoundland and labrador': { country: 'CA', region: 'Newfoundland and Labrador' },
+  'northwest territories': { country: 'CA', region: 'Northwest Territories' },
+  'nova scotia': { country: 'CA', region: 'Nova Scotia' },
+  'nunavut': { country: 'CA', region: 'Nunavut' },
+  'ontario': { country: 'CA', region: 'Ontario' },
+  'prince edward island': { country: 'CA', region: 'Prince Edward Island' },
+  'quebec': { country: 'CA', region: 'Quebec' },
+  'saskatchewan': { country: 'CA', region: 'Saskatchewan' },
+  'yukon': { country: 'CA', region: 'Yukon' },
+  // USA
+  'alabama': { country: 'US', region: 'Alabama' },
+  'alaska': { country: 'US', region: 'Alaska' },
+  'arizona': { country: 'US', region: 'Arizona' },
+  'arkansas': { country: 'US', region: 'Arkansas' },
+  'california': { country: 'US', region: 'California' },
+  'colorado': { country: 'US', region: 'Colorado' },
+  'connecticut': { country: 'US', region: 'Connecticut' },
+  'delaware': { country: 'US', region: 'Delaware' },
+  'district of columbia': { country: 'US', region: 'District of Columbia' },
+  'florida': { country: 'US', region: 'Florida' },
+  'georgia': { country: 'US', region: 'Georgia' },
+  'hawaii': { country: 'US', region: 'Hawaii' },
+  'idaho': { country: 'US', region: 'Idaho' },
+  'illinois': { country: 'US', region: 'Illinois' },
+  'indiana': { country: 'US', region: 'Indiana' },
+  'iowa': { country: 'US', region: 'Iowa' },
+  'kansas': { country: 'US', region: 'Kansas' },
+  'kentucky': { country: 'US', region: 'Kentucky' },
+  'louisiana': { country: 'US', region: 'Louisiana' },
+  'maine': { country: 'US', region: 'Maine' },
+  'maryland': { country: 'US', region: 'Maryland' },
+  'massachusetts': { country: 'US', region: 'Massachusetts' },
+  'michigan': { country: 'US', region: 'Michigan' },
+  'minnesota': { country: 'US', region: 'Minnesota' },
+  'mississippi': { country: 'US', region: 'Mississippi' },
+  'missouri': { country: 'US', region: 'Missouri' },
+  'montana': { country: 'US', region: 'Montana' },
+  'nebraska': { country: 'US', region: 'Nebraska' },
+  'nevada': { country: 'US', region: 'Nevada' },
+  'new hampshire': { country: 'US', region: 'New Hampshire' },
+  'new jersey': { country: 'US', region: 'New Jersey' },
+  'new mexico': { country: 'US', region: 'New Mexico' },
+  'new york': { country: 'US', region: 'New York' },
+  'north carolina': { country: 'US', region: 'North Carolina' },
+  'north dakota': { country: 'US', region: 'North Dakota' },
+  'ohio': { country: 'US', region: 'Ohio' },
+  'oklahoma': { country: 'US', region: 'Oklahoma' },
+  'oregon': { country: 'US', region: 'Oregon' },
+  'pennsylvania': { country: 'US', region: 'Pennsylvania' },
+  'rhode island': { country: 'US', region: 'Rhode Island' },
+  'south carolina': { country: 'US', region: 'South Carolina' },
+  'south dakota': { country: 'US', region: 'South Dakota' },
+  'tennessee': { country: 'US', region: 'Tennessee' },
+  'texas': { country: 'US', region: 'Texas' },
+  'utah': { country: 'US', region: 'Utah' },
+  'vermont': { country: 'US', region: 'Vermont' },
+  'virginia': { country: 'US', region: 'Virginia' },
+  'washington': { country: 'US', region: 'Washington' },
+  'west virginia': { country: 'US', region: 'West Virginia' },
+  'wisconsin': { country: 'US', region: 'Wisconsin' },
+  'wyoming': { country: 'US', region: 'Wyoming' },
+};
+
+const buildSearchFilters = (jurisdiction: string): { allowed_domains?: string[]; user_location?: Record<string, string> } => {
+  const normalized = normalizeJurisdiction(jurisdiction);
+  const location = COUNTRY_FROM_JURISDICTION[normalized];
+
+  let allowed_domains: string[] | undefined;
+  if (location?.country === 'CA') {
+    allowed_domains = ['justice.gc.ca', 'canada.ca', 'canlii.org', 'ontario.ca'];
+  } else if (location?.country === 'US') {
+    allowed_domains = ['usa.gov', 'uscourts.gov', 'childwelfare.gov', 'hhs.gov'];
+  }
+
+  const user_location =
+    location?.country
+      ? {
+          type: 'approximate',
+          country: location.country,
+          ...(location.region ? { region: location.region } : {}),
+        }
+      : undefined;
+
+  return { allowed_domains, user_location };
+};
 
 const getOpenAiApiKey = (): string => {
   const serverKey =
@@ -88,15 +183,17 @@ const callResponseJson = async <T>(
     prompt: string;
     schema: typeof SCHEMAS[keyof typeof SCHEMAS];
     tools?: unknown[];
+    include?: string[];
   },
   options?: OpenAIRequestOptions
-): Promise<T> => {
+): Promise<ResponseJsonResult<T>> => {
   try {
     return await getClient().responseJson<T>(
       {
         prompt: payload.prompt,
         schema: payload.schema,
         tools: payload.tools,
+        include: payload.include,
       },
       options
     );
@@ -153,22 +250,36 @@ export const generateCategorization = async (
 export const generateLegalInsights = async (
   incidentData: IncidentData,
   options?: OpenAIRequestOptions
-): Promise<{ legalInsights: string; sources: string[] }> => {
+): Promise<{ legalInsights: string; sources: string[]; citations: ResponseJsonResult<unknown>['citations'] }> => {
   const context = buildPromptContext(incidentData);
   const prompt = PROMPTS.legalInsights(context, incidentData.jurisdiction);
+  const { allowed_domains, user_location } = buildSearchFilters(incidentData.jurisdiction || '');
 
   try {
-    return await callResponseJson<{ legalInsights: string; sources: string[] }>(
+    const result = await callResponseJson<{ legalInsights: string; sources: string[] }>(
       {
         prompt,
         schema: SCHEMAS.legal,
-        tools: [{ type: 'web_search_preview' }],
+        tools: [
+          {
+            type: 'web_search',
+            ...(allowed_domains ? { filters: { allowed_domains } } : {}),
+            ...(user_location ? { user_location } : {}),
+          },
+        ],
+        include: ['output_text', 'web_search_call.action.sources'],
       },
       options
     );
+
+    return {
+      legalInsights: result.data.legalInsights,
+      sources: result.sources.length ? result.sources : result.data.sources,
+      citations: result.citations,
+    };
   } catch (error) {
     console.error('Web search legal insights failed, falling back to standard completion:', error);
-    return callChatJson(
+    const fallback = await callChatJson<{ legalInsights: string; sources: string[] }>(
       {
         messages: [
           {
@@ -182,6 +293,12 @@ export const generateLegalInsights = async (
       },
       options
     );
+
+    return {
+      legalInsights: fallback.legalInsights,
+      sources: fallback.sources,
+      citations: [],
+    };
   }
 };
 

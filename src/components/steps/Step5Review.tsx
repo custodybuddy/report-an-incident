@@ -2,7 +2,6 @@ import React, { useMemo, useRef } from 'react';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
 import type { IncidentData, ReportResult } from '../../types';
-import { convertMarkdownToHtml } from '../../utils/markdown';
 import {
   deriveStatuteSummaries,
   getJurisdictionResources,
@@ -61,27 +60,6 @@ const Section: React.FC<{
   );
 };
 
-interface LegalInsightBrief {
-  id: string;
-  title: string;
-  html: string;
-}
-
-const createLegalInsightBriefs = (rawBlocks: string[]): LegalInsightBrief[] =>
-  rawBlocks
-    .map(block => block.replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((text, index) => {
-      const truncated = text.length > 200 ? `${text.slice(0, 197)}…` : text;
-      const html = convertMarkdownToHtml(truncated);
-      return {
-        id: `insight-brief-${index}`,
-        title: `Insight ${index + 1}`,
-        html,
-      };
-    });
-
 const normalizeProfessionalSummary = (
   summary: string | undefined,
   date: string,
@@ -116,22 +94,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   const normalizedSources = useMemo(
     () => normalizeSources(reportResult?.sources ?? []),
     [reportResult?.sources],
-  );
-
-  const legalInsightRawBlocks = useMemo(() => {
-    if (!reportResult?.legalInsights) {
-      return [];
-    }
-
-    return reportResult.legalInsights
-      .split(/\n{2,}/)
-      .map(block => block.trim())
-      .filter(Boolean);
-  }, [reportResult?.legalInsights]);
-
-  const legalInsightBriefs = useMemo(
-    () => createLegalInsightBriefs(legalInsightRawBlocks),
-    [legalInsightRawBlocks],
   );
 
   const statuteSummaries = useMemo(
@@ -204,7 +166,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
       <div className="text-center mb-2 space-y-2">
         <H2 className="text-3xl font-bold text-amber-200">Court-Ready Review</H2>
         <p className="text-slate-200 max-w-2xl mx-auto">
-          Confirm the facts, then generate a clean, court-focused document with structured findings and cited sources.
+          Confirm the facts, then generate a clean, court-focused document with structured findings.
         </p>
       </div>
 
@@ -233,25 +195,6 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
               headingLevel="h2"
             />
 
-            {legalInsightBriefs.length > 0 && (
-              <section className="space-y-3 rounded-2xl border border-slate-700 bg-slate-900/70 p-6 shadow-sm">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-[0.24em]">
-                  AI Legal Insights
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {legalInsightBriefs.map(insight => (
-                    <div key={insight.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                      <p className="text-sm font-semibold text-amber-200 mb-2">{insight.title}</p>
-                      <div
-                        className="text-sm text-slate-100 leading-relaxed space-y-2 [&_a]:text-amber-200 [&_a:hover]:underline"
-                        dangerouslySetInnerHTML={{ __html: insight.html }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {(statuteSummaries.length > 0 || jurisdictionResources.length > 0) && (
               <section className="rounded-2xl border border-slate-700 bg-slate-900/70 p-6 shadow-sm space-y-3">
                 <p className="text-xs font-semibold text-slate-300 uppercase tracking-[0.24em]">
@@ -260,7 +203,7 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
                 <div className="space-y-4">
                   {statuteSummaries.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm text-slate-200">Key acts cited by the AI for this jurisdiction:</p>
+                      <p className="text-sm text-slate-200">Key acts for this jurisdiction:</p>
                       <ul className="space-y-2">
                         {statuteSummaries.map(statute => (
                           <li key={statute.id} className="text-sm text-slate-100">

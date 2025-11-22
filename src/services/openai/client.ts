@@ -10,6 +10,19 @@ export interface OpenAIMessage {
   content: MessageContent;
 }
 
+export interface UrlCitation {
+  url: string;
+  title?: string;
+  start_index?: number;
+  end_index?: number;
+}
+
+export interface ResponseJsonResult<T> {
+  data: T;
+  citations: UrlCitation[];
+  sources: string[];
+}
+
 export interface JsonSchemaDefinition {
   name: string;
   schema: Record<string, unknown>;
@@ -99,6 +112,56 @@ const extractResponseOutput = (responseJson: any): string => {
   }
 
   return '';
+};
+
+const extractCitations = (responseJson: any): UrlCitation[] => {
+  const message = responseJson?.output?.find((item: any) => item?.type === 'message');
+  if (!message?.content) {
+    return [];
+  }
+
+  const annotations = (Array.isArray(message.content) ? message.content : [])
+    .flatMap((item: any) => (item?.annotations && Array.isArray(item.annotations) ? item.annotations : []))
+    .filter((annotation: any) => annotation?.type === 'url_citation' && annotation?.url);
+
+  const seen = new Set<string>();
+  return annotations
+    .map((annotation: any) => {
+      const key = `${annotation.url}-${annotation.start_index ?? 'x'}-${annotation.end_index ?? 'y'}`;
+      if (seen.has(key)) {
+        return null;
+      }
+      seen.add(key);
+      return {
+        url: annotation.url as string,
+        title: annotation.title as string | undefined,
+        start_index: annotation.start_index as number | undefined,
+        end_index: annotation.end_index as number | undefined,
+      };
+    })
+    .filter((item): item is UrlCitation => Boolean(item));
+};
+
+const extractSources = (responseJson: any): string[] => {
+  const sources = new Set<string>();
+
+  const searchCalls = Array.isArray(responseJson?.output)
+    ? responseJson.output.filter((item: any) => item?.type === 'web_search_call')
+    : [];
+
+  searchCalls.forEach((call: any) => {
+    const fromAction = call?.action?.sources ?? call?.sources ?? call?.output?.sources;
+    (Array.isArray(fromAction) ? fromAction : []).forEach((url: any) => {
+      if (typeof url === 'string' && url.trim()) {
+        sources.add(url.trim());
+      }
+    });
+  });
+
+  // Also include any URLs present in citations for completeness.
+  extractCitations(responseJson).forEach(citation => sources.add(citation.url));
+
+  return Array.from(sources);
 };
 
 const parseJson = <T>(text: string, errorMessage: string): T => {
@@ -241,22 +304,32 @@ export const createOpenAIClient = (config: OpenAIClientConfig) => {
       schema: JsonSchemaDefinition;
       model?: string;
       tools?: unknown[];
+      tool_choice?: 'auto' | 'none';
+      include?: string[];
       temperature?: number;
     },
     options?: OpenAIRequestOptions
-  ): Promise<T> => {
-    const messages: OpenAIMessage[] = [{ role: 'user', content: payload.prompt }];
-    const text = await chatText(
+  ): Promise<ResponseJsonResult<T>> => {
+    const json = await execute(
+      resolvedConfig.responsesUrl,
       {
-        messages,
-        model: payload.model ?? resolvedConfig.webModel,
-        temperature: payload.temperature,
+        model: payload.model ?? resolvedConfig.webModel ?? resolvedConfig.defaultModel,
+        input: [{ role: 'user', content: payload.prompt }],
+        temperature: payload.temperature ?? resolvedConfig.temperature,
+        tools: payload.tools,
+        tool_choice: payload.tool_choice ?? 'auto',
         response_format: { type: 'json_schema', json_schema: payload.schema },
+        ...(payload.include ? { include: payload.include } : {}),
       },
       options
     );
 
-    return parseJson<T>(text, 'OpenAI response was not valid JSON.');
+    const text = extractResponseOutput(json);
+    const data = parseJson<T>(text, 'OpenAI response was not valid JSON.');
+    const citations = extractCitations(json);
+    const sources = extractSources(json);
+
+    return { data, citations, sources };
   };
 
   return {

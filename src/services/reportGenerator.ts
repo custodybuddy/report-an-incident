@@ -10,11 +10,28 @@ import {
 
 const isBrowser = typeof window !== 'undefined';
 const getApiBaseUrl = () => {
-  const value =
+  // Prefer explicit env configuration.
+  const envValue =
     typeof import.meta !== 'undefined' && import.meta.env?.VITE_REPORT_API_URL
       ? import.meta.env.VITE_REPORT_API_URL
-      : '/api';
-  return value.replace(/\/$/, '');
+      : undefined;
+
+  if (envValue) {
+    return envValue.replace(/\/$/, '');
+  }
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+    if (isLocalHost) {
+      // Local dev: route to local proxy to avoid CORS.
+      return 'http://127.0.0.1:8788/api';
+    }
+    // Non-localhost fallback to hosted API.
+    return 'https://custodybuddy.com/api';
+  }
+
+  return 'https://custodybuddy.com/api';
 };
 
 const requestViaProxy = async (incident: IncidentData): Promise<ReportResult> => {
@@ -57,6 +74,7 @@ const fallbackLegal = {
   legalInsights:
     'This is not legal advice and is for informational purposes only. You should consult with a qualified legal professional.',
   sources: [],
+  citations: [],
 };
 
 const fallbackNextSteps = {
@@ -82,6 +100,7 @@ export const generateIncidentReport = async (incident: IncidentData): Promise<Re
       severityJustification: fallbackCategorization.severityJustification,
       legalInsights: fallbackLegal.legalInsights,
       sources: fallbackLegal.sources,
+      legalCitations: fallbackLegal.citations,
       observedImpact: fallbackNextSteps.observedImpact,
       communicationDraft: undefined,
       promptContext: buildPromptContext(incident),
@@ -126,6 +145,7 @@ export const generateIncidentReport = async (incident: IncidentData): Promise<Re
     severityJustification: categorization.severityJustification,
     legalInsights: legal.legalInsights,
     sources: legal.sources,
+    legalCitations: legal.citations,
     observedImpact: nextSteps.observedImpact,
     communicationDraft,
     promptContext: buildPromptContext(incident),

@@ -3,7 +3,8 @@ import { parse as parseUrl } from 'node:url';
 import { generateIncidentReport } from '../src/services/reportGenerator';
 import type { IncidentData, ReportResult } from '../src/types';
 
-const PORT = Number(process.env.PORT || 8788);
+const PORT = Number(process.env.local || process.env.PORT || 8788);
+const HOST = process.env.HOST || '127.0.0.1';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 const setCorsHeaders = (res: ServerResponse) => {
@@ -65,6 +66,6 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`OpenAI proxy listening on http://0.0.0.0:${PORT}/api/incident-report`);
+server.listen(PORT, HOST, () => {
+  console.log(`OpenAI proxy listening on http://${HOST}:${PORT}/api/incident-report`);
 });
