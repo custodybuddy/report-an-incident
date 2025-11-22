@@ -20,16 +20,11 @@ const Step2Narrative: React.FC<Step2NarrativeProps> = ({ narrative, onChange }) 
   const isMinLengthMet = charCount >= 100;
 
   return (
-    <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
-      <div className="text-center mb-8">
-        <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">
-          The Incident Narrative
-        </H1>
-        <p className="text-slate-400 max-w-md mx-auto">
-          This pared-down page keeps the original look so you can mock up narratives without any AI
-          or storage layers attached.
-        </p>
-      </div>
+    <div className="space-y-10 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
+      <StepHero
+        title="The Incident Narrative"
+        description="This pared-down page keeps the original look so you can mock up narratives without any AI or storage layers attached."
+      />
       <div className="max-w-4xl mx-auto">
         <label htmlFor="narrative-input" className="block text-sm font-semibold text-slate-300 mb-3">
           Incident Description (Min 100 characters) <span className="text-amber-400">*</span>
