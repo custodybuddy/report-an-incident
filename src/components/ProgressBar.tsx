@@ -18,7 +18,7 @@ const CheckIcon = () => (
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep }) => {
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-6">
       {steps.map((step, index) => {
         const isActive = currentStep === step.number;
         const isCompleted = currentStep > step.number;
@@ -37,8 +37,12 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ steps, currentStep, goToStep 
 
         return (
           <React.Fragment key={step.number}>
-            {index > 0 && <div className={`h-1 flex-1 mx-2 mt-5 rounded-full transition-all duration-700 ${lineClass}`} />}
-            <div className="flex flex-col items-center flex-1 min-w-0">
+            {index > 0 && (
+              <div
+                className={`h-1 flex-[1_1_64px] min-w-[48px] max-w-[96px] self-center mt-5 rounded-full transition-all duration-700 ${lineClass}`}
+              />
+            )}
+            <div className="flex flex-col items-center flex-[1_1_140px] min-w-[110px] max-w-[180px]">
               <button
                 onClick={() => goToStep(step.number)}
                 className={`relative flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-500 cursor-pointer ${iconClasses}`}
