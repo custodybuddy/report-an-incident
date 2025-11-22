@@ -35,7 +35,8 @@ const DraftRestoreBanner: React.FC<DraftRestoreBannerProps> = ({ onRestore, onDi
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Draft available</p>
             <p className="text-base text-amber-50/90">
-              We found a saved report draft. Restore it or start a fresh report.
+              We saved your report draft in this browser so it stays available even after closing the tab. Restore it or start
+              a fresh report.
             </p>
           </div>
         </div>

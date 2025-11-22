@@ -14,7 +14,7 @@ import { STEPS } from './ui/steps';
 import { createInitialIncident, type IncidentData, type ReportResult } from './types';
 import { generateIncidentReport } from './services/reportGenerator';
 import { assertApiBaseUrl } from './services/apiConfig';
-import useIncidentDraftStorage from './hooks/useIncidentDraftStorage';
+import useIncidentDraftStorage, { type StorageType } from './hooks/useIncidentDraftStorage';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -26,11 +26,19 @@ function App() {
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [hasHandledStoredDraft, setHasHandledStoredDraft] = useState(false);
   const [shouldPersistDraft, setShouldPersistDraft] = useState(false);
+  const draftStorageType: StorageType = 'local';
+
+  const storagePersistenceMessage = useMemo(() => {
+    return draftStorageType === 'local'
+      ? 'Drafts save to this browser so you can close the tab and pick up where you left off.'
+      : 'Drafts stay available while this tab remains open. Start fresh anytime to clear them.';
+  }, [draftStorageType]);
 
   const { storedDraft, hasStoredDraft, clearDraft } = useIncidentDraftStorage({
     incidentData,
     currentStep,
     enabled: shouldPersistDraft,
+    storageType: draftStorageType,
   });
 
   const clearGeneratedReport = useCallback(() => {
@@ -292,6 +300,7 @@ function App() {
         {showRestorePrompt && storedDraft && (
           <DraftRestoreBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
         )}
+        <p className="mb-4 text-sm text-slate-300">{storagePersistenceMessage}</p>
         <ProgressBar steps={STEPS} currentStep={currentStep} goToStep={goToStep} />
         <div className="bg-black/50 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-700/80 p-6 md:p-10 transition-all duration-300 mt-8 flex flex-col gap-6">
           {stepContent}
