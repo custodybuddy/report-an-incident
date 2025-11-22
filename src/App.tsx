@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import ProgressBar from './components/ProgressBar';
 import Navigation from './components/Navigation';
+import DraftRestoreBanner from './components/DraftRestoreBanner';
 import Step0Consent from './components/steps/Step0Consent';
 import Step1DateTime from './components/steps/Step1DateTime';
 import Step2Narrative from './components/steps/Step2Narrative';
@@ -13,6 +14,7 @@ import { STEPS } from './ui/steps';
 import { createInitialIncident, type IncidentData, type ReportResult } from './types';
 import { generateIncidentReport } from './services/reportGenerator';
 import { assertApiBaseUrl } from './services/apiConfig';
+import useIncidentDraftStorage from './hooks/useIncidentDraftStorage';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -20,6 +22,16 @@ function App() {
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [shouldPersistDraft, setShouldPersistDraft] = useState(false);
+  const [hasHandledStoredDraft, setHasHandledStoredDraft] = useState(false);
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+
+  const { storedDraft, hasStoredDraft, clearDraft } = useIncidentDraftStorage({
+    incidentData,
+    currentStep,
+    enabled: shouldPersistDraft,
+    storageType: 'session',
+  });
 
   const clearGeneratedReport = useCallback(() => {
     setReportResult(null);
@@ -42,12 +54,15 @@ function App() {
     [clearGeneratedReport]
   );
 
-  const resetWizard = () => {
+  const resetWizard = useCallback(() => {
+    clearDraft();
     setIncidentData(createInitialIncident());
     setReportResult(null);
     setReportError(null);
     setCurrentStep(1);
-  };
+    setHasHandledStoredDraft(true);
+    setShouldPersistDraft(true);
+  }, [clearDraft]);
 
   type StepValidationEntry = [step: number, isValid: boolean];
   const stepValidationEntries = useMemo<StepValidationEntry[]>(
@@ -98,6 +113,32 @@ function App() {
     resetWizard();
   };
 
+  const handleRestoreDraft = useCallback(() => {
+    if (!storedDraft) {
+      return;
+    }
+
+    setIncidentData(prev => ({
+      ...createInitialIncident(),
+      ...prev,
+      ...storedDraft.incidentData,
+    }));
+    setReportResult(null);
+    setReportError(null);
+    setCurrentStep(Math.min(Math.max(storedDraft.currentStep, 1), STEPS.length));
+    setShowRestorePrompt(false);
+    setHasHandledStoredDraft(true);
+    setShouldPersistDraft(true);
+  }, [storedDraft]);
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    resetWizard();
+    setShowRestorePrompt(false);
+    setHasHandledStoredDraft(true);
+    setShouldPersistDraft(true);
+  }, [clearDraft, resetWizard]);
+
   useEffect(() => {
     if (currentStep !== 5 || typeof window === 'undefined') {
       return;
@@ -139,6 +180,20 @@ function App() {
     const entry = stepValidationEntries.find(([step]) => step === currentStep);
     return entry ? entry[1] : true;
   }, [currentStep, stepValidationEntries]);
+
+  useEffect(() => {
+    if (hasHandledStoredDraft) {
+      return;
+    }
+
+    if (hasStoredDraft) {
+      setShowRestorePrompt(true);
+      return;
+    }
+
+    setHasHandledStoredDraft(true);
+    setShouldPersistDraft(true);
+  }, [hasHandledStoredDraft, hasStoredDraft]);
 
   const stepContent = useMemo(() => {
     switch (currentStep) {
@@ -206,6 +261,9 @@ function App() {
     <>
       <Header onCreateNewReport={handleStartNewReport} />
       <main className="max-w-5xl mx-auto py-16 px-6 md:px-12">
+        {showRestorePrompt && storedDraft && (
+          <DraftRestoreBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
+        )}
         <ProgressBar steps={STEPS} currentStep={currentStep} goToStep={goToStep} />
         <div className="bg-black/50 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-700/80 p-6 md:p-10 transition-all duration-300 mt-8 flex flex-col gap-6">
           {stepContent}
