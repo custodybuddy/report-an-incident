@@ -131,24 +131,30 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <select
-                      value={file.category}
-                      onChange={event => updateEvidenceItem(file.id, 'category', event.target.value)}
-                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
-                    >
-                      {EVIDENCE_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Brief description of this file..."
-                      value={file.description}
-                      onChange={event => updateEvidenceItem(file.id, 'description', event.target.value)}
-                      className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
-                    />
+                    <div className="space-y-1">
+                      <span className="text-xs text-slate-400">Category</span>
+                      <select
+                        value={file.category}
+                        onChange={event => updateEvidenceItem(file.id, 'category', event.target.value)}
+                        className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
+                      >
+                        {EVIDENCE_CATEGORIES.map(cat => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-slate-400">Description</span>
+                      <input
+                        type="text"
+                        placeholder="Brief description of this file..."
+                        value={file.description}
+                        onChange={event => updateEvidenceItem(file.id, 'description', event.target.value)}
+                        className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md text-slate-300 text-sm focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:border-amber-300"
+                      />
+                    </div>
                   </div>
                   <p className="text-xs text-slate-400">
                     This information is temporary and resets if you refresh the page.
