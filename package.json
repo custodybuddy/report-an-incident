@@ -11,6 +11,7 @@
     "test": "node --loader ./ts-node-loader.mjs --test src/utils/dateTime.test.ts"
   },
   "dependencies": {
+    "openai": "^4.85.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
