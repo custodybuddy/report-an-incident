@@ -11,19 +11,23 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ onPrev, onNext, onCancel, currentStep, canProceed }) => {
+  const hasCancel = currentStep > 1;
+
   return (
-    <div className="mt-10 pt-6 border-t border-slate-700 flex justify-between items-center">
-      <div>
-        {currentStep > 1 && (
-          <Button
-            onClick={onCancel}
-            variant="ghost"
-            className="text-slate-400 hover:bg-red-900/40 hover:text-red-300"
-          >
-            Cancel &amp; Reset
-          </Button>
-        )}
-      </div>
+    <div
+      className={`mt-10 pt-6 border-t border-slate-700 flex items-center ${
+        hasCancel ? 'justify-between' : 'justify-end'
+      }`}
+    >
+      {hasCancel && (
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          className="text-slate-400 hover:bg-red-900/40 hover:text-red-300"
+        >
+          Cancel &amp; Reset
+        </Button>
+      )}
 
       <div className="flex items-center gap-4">
         <Button
