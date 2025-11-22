@@ -107,10 +107,12 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                       <p className="font-semibold text-slate-200 break-all">{file.name}</p>
                       <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
                     </div>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => removeEvidenceItem(file.id)}
                       aria-label={`Remove ${file.name}`}
-                      className="text-slate-400 hover:text-red-400 transition-colors p-1 flex-shrink-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                      className="flex-shrink-0 text-slate-300 hover:text-red-300"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -128,7 +130,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                         <line x1="10" y1="11" x2="10" y2="17" />
                         <line x1="14" y1="11" x2="14" y2="17" />
                       </svg>
-                    </button>
+                    </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
