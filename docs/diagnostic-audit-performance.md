@@ -1,0 +1,13 @@
+# Diagnostic Audit: Performance Bottlenecks
+
+## Summary
+- Identified high-frequency storage writes and root-level renders that can stall the UI during text-heavy input.
+- Flagged linear-time evidence list updates and rendering that scale poorly as attachments grow.
+- Noted multi-request AI generation pipeline and print/export flows that extend perceived latency under load.
+
+## Findings
+1. **Unthrottled draft persistence on every change.** Once persistence is enabled and consent acknowledged, each incident update triggers a full `incident-draft` write to web storage via `JSON.stringify` without debounce, including large narratives and evidence arrays. This synchronous write path runs on every keystroke (e.g., in the narrative textarea), risking main-thread jank and storage quota churn. 【F:src/hooks/useIncidentDraftStorage.ts†L96-L108】【F:src/hooks/useIncidentDraftStorage.ts†L77-L85】
+2. **Monolithic App state forces whole-wizard re-renders.** All incident fields, navigation, and report status live in `App` state, so any field change causes the header, progress bar, navigation controls, and step container to re-render and recompute validation gates. Long narrative typing re-executes the `useMemo` validations and step switching logic even though only one step's UI needs updating. 【F:src/App.tsx†L20-L110】【F:src/App.tsx†L225-L306】
+3. **Evidence edits copy the full list on each keystroke.** Updating a single evidence description or category maps the entire evidence array before storing it back in `App` state, and the render layer re-renders every evidence card. With many files, each character typed in a description becomes an O(n) operation plus a full wizard re-render. 【F:src/hooks/useEvidenceList.ts†L24-L48】【F:src/components/steps/Step4Evidence.tsx†L91-L157】
+4. **AI report generation issues multiple sequential calls.** When a server API key is present, report generation fires four concurrent OpenAI requests (summary, categorization, legal, next steps) and then a fifth for the communication draft. Each request transmits the full incident context, so latency compounds and increases timeout risk compared to a single-call pipeline or streamed response. 【F:src/services/reportGenerator.ts†L96-L170】
+5. **Report export clones the full DOM into a new window.** The print/export handler pulls `innerHTML` from the review container and writes a full HTML document into a popup before printing. For large reports with many sections, this DOM serialization and reflow happens on the main thread and can stall the UI during export. 【F:src/components/steps/Step5Review.tsx†L125-L160】
