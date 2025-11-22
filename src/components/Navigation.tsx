@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import Button from './ui/Button';
 
 interface NavigationProps {
@@ -58,4 +58,4 @@ const Navigation: React.FC<NavigationProps> = ({ onPrev, onNext, onCancel, curre
   );
 };
 
-export default Navigation;
+export default memo(Navigation);

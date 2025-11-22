@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Button from './ui/Button';
 
 interface DraftRestoreBannerProps {
@@ -52,4 +52,4 @@ const DraftRestoreBanner: React.FC<DraftRestoreBannerProps> = ({ onRestore, onDi
   );
 };
 
-export default DraftRestoreBanner;
+export default memo(DraftRestoreBanner);

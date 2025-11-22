@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { SITE_LINKS } from '../config/links';
 
 const Footer: React.FC = () => {
@@ -34,4 +34,4 @@ const Footer: React.FC = () => {
   );
 };
 
-export default Footer;
+export default memo(Footer);
