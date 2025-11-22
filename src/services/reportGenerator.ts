@@ -90,6 +90,8 @@ const fallbackLegal = {
 
 const fallbackNextSteps = {
   observedImpact: 'Impact analysis unavailable.',
+  aiNotes:
+    '## What I Notice\n- Observations are unavailable because AI generation is offline.\n- No additional behavioral notes could be created.\n\n## Co-Parenting Guidance\n- Consider maintaining calm, neutral communication while AI guidance is unavailable.\n- Seek support from trusted professionals if needed.\n\n## Documentation & Safety Reminders\n- Continue documenting dates, times, and facts for your records.\n- Retain any evidence or messages relevant to the incident.',
 };
 
 const hasServerApiKey = (): boolean =>
@@ -118,6 +120,7 @@ export const generateIncidentReport = async (
       sources: fallbackLegal.sources,
       legalCitations: fallbackLegal.citations,
       observedImpact: fallbackNextSteps.observedImpact,
+      aiNotes: fallbackNextSteps.aiNotes,
       communicationDraft: undefined,
       promptContext: buildPromptContext(incident),
       aiResponses: {
@@ -163,6 +166,7 @@ export const generateIncidentReport = async (
     sources: legal.sources,
     legalCitations: legal.citations,
     observedImpact: nextSteps.observedImpact,
+    aiNotes: nextSteps.aiNotes,
     communicationDraft,
     promptContext: buildPromptContext(incident),
     aiResponses: {

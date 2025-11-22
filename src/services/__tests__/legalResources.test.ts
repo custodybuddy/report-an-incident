@@ -13,6 +13,14 @@ describe('buildLegalResources', () => {
     legalInsights: "Family Law Act applies and Child, Youth and Family Services Act may be relevant.",
     sources: ['https://www.ontario.ca/laws/statute/90f03'],
     observedImpact: 'Stress',
+    aiNotes: `## What I Notice
+- Observation one
+
+## Co-Parenting Guidance
+- Keep communication neutral
+
+## Documentation & Safety Reminders
+- Save related messages`,
   };
 
   it('returns normalized sources and matching statute hints', () => {
