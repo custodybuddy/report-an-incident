@@ -1,4 +1,9 @@
 import { RESOURCE_LINKS } from '../config/links';
+import {
+  CANADIAN_JURISDICTIONS,
+  US_JURISDICTIONS,
+  normalizeJurisdiction,
+} from '../config/jurisdictions';
 
 export interface NormalizedSource {
   id: string;
@@ -97,76 +102,6 @@ const JURISDICTION_LEGISLATION: Record<string, { title: string; url: string }[]>
   ],
 };
 
-const CANADIAN_JURISDICTIONS = [
-  'alberta',
-  'british columbia',
-  'manitoba',
-  'new brunswick',
-  'newfoundland and labrador',
-  'northwest territories',
-  'nova scotia',
-  'nunavut',
-  'ontario',
-  'prince edward island',
-  'quebec',
-  'saskatchewan',
-  'yukon',
-];
-
-const US_JURISDICTIONS = [
-  'alabama',
-  'alaska',
-  'arizona',
-  'arkansas',
-  'california',
-  'colorado',
-  'connecticut',
-  'delaware',
-  'district of columbia',
-  'florida',
-  'georgia',
-  'hawaii',
-  'idaho',
-  'illinois',
-  'indiana',
-  'iowa',
-  'kansas',
-  'kentucky',
-  'louisiana',
-  'maine',
-  'maryland',
-  'massachusetts',
-  'michigan',
-  'minnesota',
-  'mississippi',
-  'missouri',
-  'montana',
-  'nebraska',
-  'nevada',
-  'new hampshire',
-  'new jersey',
-  'new mexico',
-  'new york',
-  'north carolina',
-  'north dakota',
-  'ohio',
-  'oklahoma',
-  'oregon',
-  'pennsylvania',
-  'rhode island',
-  'south carolina',
-  'south dakota',
-  'tennessee',
-  'texas',
-  'utah',
-  'vermont',
-  'virginia',
-  'washington',
-  'west virginia',
-  'wisconsin',
-  'wyoming',
-];
-
 const REGIONAL_RESOURCES: Record<'canada' | 'us', { title: string; url: string }[]> = {
   canada: [
     {
@@ -248,7 +183,7 @@ export const getJurisdictionResources = (
   if (!jurisdiction) {
     return [];
   }
-  const key = jurisdiction.trim().toLowerCase();
+  const key = normalizeJurisdiction(jurisdiction);
   const matches = JURISDICTION_LEGISLATION[key] ?? [];
   const region = CANADIAN_JURISDICTIONS.includes(key)
     ? 'canada'
