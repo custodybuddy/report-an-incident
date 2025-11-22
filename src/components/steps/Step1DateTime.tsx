@@ -1,5 +1,5 @@
 import React from 'react';
-import H1 from '../ui/H1';
+import StepHero from '../ui/StepHero';
 
 interface Step1DateTimeProps {
   date: string;
@@ -10,22 +10,13 @@ interface Step1DateTimeProps {
 const Step1DateTime: React.FC<Step1DateTimeProps> = ({ date, time, onChange }) => {
 
   return (
-    <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
-      <div className="text-center mb-8">
-        <img
-          src="https://custodybuddy.com/incident-report/img/WhenIcon.png"
-          alt="Clock and calendar icon"
-          className="w-36 h-24 mx-auto mb-6 object-contain"
-          aria-hidden="true"
-        />
-        <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">
-          When did this incident occur?
-        </H1>
-        <p className="text-slate-400 max-w-md mx-auto">
-          Capture a quick timestamp so the rest of the pages have context. These form controls keep
-          the styling but purposely avoid any backend logic.
-        </p>
-      </div>
+    <div className="space-y-10 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
+      <StepHero
+        imageSrc="https://custodybuddy.com/incident-report/img/WhenIcon.png"
+        imageAlt="Clock and calendar icon"
+        title="When did this incident occur?"
+        description="Capture a quick timestamp so the rest of the pages have context. These form controls keep the styling but purposely avoid any backend logic."
+      />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
         <div>
           <label htmlFor="date-input" className="block text-sm font-semibold text-slate-300 mb-2">
