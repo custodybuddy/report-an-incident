@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import { STEPS } from './ui/steps';
 import { createInitialIncident, type IncidentData, type ReportResult } from './types';
 import { generateIncidentReport } from './services/reportGenerator';
+import { assertApiBaseUrl } from './services/apiConfig';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -97,6 +98,22 @@ function App() {
     resetWizard();
   };
 
+  useEffect(() => {
+    if (currentStep !== 5 || typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      assertApiBaseUrl();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Report API base URL is not configured. Set VITE_REPORT_API_URL or use the localhost proxy (http://127.0.0.1:8788/api).';
+      setReportError(prev => prev ?? message);
+    }
+  }, [currentStep]);
+
   const handleGenerateReport = async () => {
     if (isGeneratingReport) {
       return;
@@ -104,6 +121,9 @@ function App() {
     setIsGeneratingReport(true);
     setReportError(null);
     try {
+      if (typeof window !== 'undefined') {
+        assertApiBaseUrl();
+      }
       const result = await generateIncidentReport(incidentData);
       setReportResult(result);
     } catch (error) {

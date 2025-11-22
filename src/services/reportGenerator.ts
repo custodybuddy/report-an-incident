@@ -7,35 +7,12 @@ import {
   generateNextSteps,
   generateProfessionalSummary,
 } from './openAiInsights';
+import { assertApiBaseUrl } from './apiConfig';
 
 const isBrowser = typeof window !== 'undefined';
-const getApiBaseUrl = () => {
-  // Prefer explicit env configuration.
-  const envValue =
-    typeof import.meta !== 'undefined' && import.meta.env?.VITE_REPORT_API_URL
-      ? import.meta.env.VITE_REPORT_API_URL
-      : undefined;
-
-  if (envValue) {
-    return envValue.replace(/\/$/, '');
-  }
-
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-    if (isLocalHost) {
-      // Local dev: route to local proxy to avoid CORS.
-      return 'http://127.0.0.1:8788/api';
-    }
-    // Non-localhost fallback to hosted API.
-    return 'https://custodybuddy.com/api';
-  }
-
-  return 'https://custodybuddy.com/api';
-};
 
 const requestViaProxy = async (incident: IncidentData): Promise<ReportResult> => {
-  const response = await fetch(`${getApiBaseUrl()}/incident-report`, {
+  const response = await fetch(`${assertApiBaseUrl()}/incident-report`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(incident),
