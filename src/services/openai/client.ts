@@ -25,6 +25,45 @@ export interface ResponseJsonResult<T> {
   sources: string[];
 }
 
+interface ResponseAnnotation {
+  type?: string;
+  url?: string;
+  title?: string;
+  startIndex?: number;
+  endIndex?: number;
+  start_index?: number;
+  end_index?: number;
+  [key: string]: unknown;
+}
+
+interface ResponseMessageContentItem {
+  type?: string;
+  text?: string;
+  annotations?: ResponseAnnotation[];
+  [key: string]: unknown;
+}
+
+type ResponseMessageContent = Array<string | ResponseMessageContentItem>;
+
+interface ResponseMessage {
+  type: 'message';
+  content?: ResponseMessageContent;
+}
+
+interface ResponseSearchCall {
+  type: 'web_search_call';
+  action?: { sources?: string[] };
+  sources?: string[];
+  output?: { sources?: string[] };
+}
+
+type ResponseOutputItem = ResponseMessage | ResponseSearchCall | ({ type?: string } & Record<string, unknown>);
+
+interface ResponseJson {
+  output?: ResponseOutputItem[];
+  text?: string | Array<string | ResponseMessageContentItem>;
+}
+
 export interface JsonSchemaDefinition {
   name: string;
   schema: Record<string, unknown>;
@@ -95,40 +134,54 @@ const extractText = (content: unknown): string => {
   return '';
 };
 
-const extractResponseOutput = (responseJson: any): string => {
-  const output = responseJson?.output;
+const isResponseMessage = (item: ResponseOutputItem): item is ResponseMessage => item?.type === 'message';
+
+const isWebSearchCall = (item: ResponseOutputItem): item is ResponseSearchCall => item?.type === 'web_search_call';
+
+const extractResponseOutput = (responseJson: ResponseJson): string => {
+  const output = responseJson.output;
   if (Array.isArray(output)) {
-    const message = output.find((item: any) => item?.type === 'message');
+    const message = output.find(isResponseMessage);
     if (message?.content) {
       return extractText(message.content);
     }
   }
 
-  const text = responseJson?.text;
+  const text = responseJson.text;
   if (typeof text === 'string') {
     return text;
   }
 
   if (Array.isArray(text)) {
-    return text.map((item: any) => (typeof item === 'string' ? item : '')).join('\n');
+    return text
+      .map(item => {
+        if (typeof item === 'string') {
+          return item;
+        }
+        if (item && typeof item === 'object' && 'text' in item && typeof item.text === 'string') {
+          return item.text;
+        }
+        return '';
+      })
+      .join('\n');
   }
 
   return '';
 };
 
-const extractCitations = (responseJson: any): UrlCitation[] => {
-  const message = responseJson?.output?.find((item: any) => item?.type === 'message');
+const extractCitations = (responseJson: ResponseJson): UrlCitation[] => {
+  const message = responseJson.output?.find(isResponseMessage);
   if (!message?.content) {
     return [];
   }
 
   const annotations = (Array.isArray(message.content) ? message.content : [])
-    .flatMap((item: any) => (item?.annotations && Array.isArray(item.annotations) ? item.annotations : []))
-    .filter((annotation: any) => annotation?.type === 'url_citation' && annotation?.url);
+    .flatMap(item => (item && typeof item === 'object' && 'annotations' in item ? item.annotations ?? [] : []))
+    .filter((annotation): annotation is ResponseAnnotation => annotation?.type === 'url_citation' && Boolean(annotation.url));
 
   const seen = new Set<string>();
   return annotations
-    .map((annotation: any) => {
+    .map(annotation => {
       // Normalize snake_case fields from the API into camelCase for downstream consumers.
       const startIndex =
         (annotation.startIndex as number | undefined) ?? (annotation.start_index as number | undefined);
@@ -149,16 +202,14 @@ const extractCitations = (responseJson: any): UrlCitation[] => {
     .filter((item): item is UrlCitation => Boolean(item));
 };
 
-const extractSources = (responseJson: any): string[] => {
+const extractSources = (responseJson: ResponseJson): string[] => {
   const sources = new Set<string>();
 
-  const searchCalls = Array.isArray(responseJson?.output)
-    ? responseJson.output.filter((item: any) => item?.type === 'web_search_call')
-    : [];
+  const searchCalls = Array.isArray(responseJson.output) ? responseJson.output.filter(isWebSearchCall) : [];
 
-  searchCalls.forEach((call: any) => {
-    const fromAction = call?.action?.sources ?? call?.sources ?? call?.output?.sources;
-    (Array.isArray(fromAction) ? fromAction : []).forEach((url: any) => {
+  searchCalls.forEach(call => {
+    const fromAction = call.action?.sources ?? call.sources ?? call.output?.sources;
+    (Array.isArray(fromAction) ? fromAction : []).forEach(url => {
       if (typeof url === 'string' && url.trim()) {
         sources.add(url.trim());
       }
