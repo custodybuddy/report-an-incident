@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { EVIDENCE_CATEGORIES, JURISDICTIONS } from '../../config/evidence';
 import useEvidenceList from '../../hooks/useEvidenceList';
 import type { EvidenceItem } from '../../types';
 import H2 from '../ui/H2';
 import Button from '../ui/Button';
+import type { FileValidationResult } from '../../hooks/useEvidenceList';
 
 interface Step4EvidenceProps {
   jurisdiction: string;
@@ -32,10 +33,49 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
   hasReport,
   error,
 }) => {
+  const [uploadResult, setUploadResult] = useState<FileValidationResult | null>(null);
+
   const { handleFileChange, removeEvidenceItem, updateEvidenceItem } = useEvidenceList({
     evidence,
     onEvidenceChange,
+    onValidationResult: setUploadResult,
   });
+
+  const uploadFeedback = useMemo(() => {
+    if (!uploadResult) {
+      return null;
+    }
+
+    if (uploadResult.totalSelected === 0) {
+      return 'No files were selected.';
+    }
+
+    const messages = [] as string[];
+
+    if (uploadResult.added.length > 0) {
+      messages.push(`${uploadResult.added.length} file${uploadResult.added.length > 1 ? 's' : ''} added successfully.`);
+    }
+
+    if (uploadResult.rejected.length > 0) {
+      const rejectedByReason = uploadResult.rejected.reduce<Record<string, number>>((acc, rejection) => {
+        acc[rejection.reason] = (acc[rejection.reason] ?? 0) + 1;
+        return acc;
+      }, {});
+
+      const detail = Object.entries(rejectedByReason)
+        .map(([reason, count]) => {
+          if (reason === 'size') {
+            return `${count} over the size limit`;
+          }
+          return `${count} with an unsupported type`;
+        })
+        .join(' and ');
+
+      messages.push(`${uploadResult.rejected.length} file${uploadResult.rejected.length > 1 ? 's' : ''} rejected (${detail}).`);
+    }
+
+    return messages.join(' ');
+  }, [uploadResult]);
 
   return (
     <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
@@ -201,6 +241,15 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
                   accept="image/*,application/pdf,audio/*,video/*"
                 />
               </article>
+              {uploadFeedback && (
+                <div
+                  className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-100"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {uploadFeedback}
+                </div>
+              )}
             </section>
           </div>
         </div>
