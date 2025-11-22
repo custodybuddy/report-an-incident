@@ -23,6 +23,15 @@ function App() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [generationController, setGenerationController] = useState<AbortController | null>(null);
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [hasHandledStoredDraft, setHasHandledStoredDraft] = useState(false);
+  const [shouldPersistDraft, setShouldPersistDraft] = useState(false);
+
+  const { storedDraft, hasStoredDraft, clearDraft } = useIncidentDraftStorage({
+    incidentData,
+    currentStep,
+    enabled: shouldPersistDraft,
+  });
 
   const clearGeneratedReport = useCallback(() => {
     setReportResult(null);
