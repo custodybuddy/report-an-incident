@@ -15,6 +15,7 @@ import { createInitialIncident, type IncidentData, type ReportResult } from './t
 import { generateIncidentReport } from './services/reportGenerator';
 import { assertApiBaseUrl } from './services/apiConfig';
 import useIncidentDraftStorage, { type StorageType } from './hooks/useIncidentDraftStorage';
+import { isTimeoutError } from './utils/errors';
 
 function App() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -180,7 +181,7 @@ function App() {
     } catch (error) {
       const wasAborted = controller.signal.aborted;
       const reason = controller.signal.reason;
-      const isTimeout = reason instanceof DOMException && reason.name === 'TimeoutError';
+      const isTimeout = isTimeoutError(reason);
 
       if (wasAborted) {
         setReportError(

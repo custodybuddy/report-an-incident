@@ -8,6 +8,7 @@ import {
   generateProfessionalSummary,
 } from './openAiInsights';
 import { assertApiBaseUrl } from './apiConfig';
+import { createTimeoutError, isTimeoutError } from '../utils/errors';
 
 const isBrowser = typeof window !== 'undefined';
 
@@ -24,7 +25,7 @@ const requestViaProxy = async (
   signal?.addEventListener('abort', abortHandler);
 
   const timeoutId = setTimeout(
-    () => abortController.abort(new DOMException('Request timed out', 'TimeoutError')),
+    () => abortController.abort(createTimeoutError()),
     REQUEST_TIMEOUT_MS
   );
 
@@ -49,7 +50,7 @@ const requestViaProxy = async (
   } catch (error) {
     if (abortController.signal.aborted) {
       const reason = abortController.signal.reason;
-      if (reason instanceof DOMException && reason.name === 'TimeoutError') {
+      if (isTimeoutError(reason)) {
         throw new Error('Report generation timed out. Please try again.');
       }
       throw new Error('Report generation was canceled. Please try again.');

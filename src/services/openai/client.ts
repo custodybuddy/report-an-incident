@@ -1,3 +1,5 @@
+import { createTimeoutError, isTimeoutError } from '../../utils/errors';
+
 export type MessageContent =
   | string
   | Array<
@@ -182,9 +184,9 @@ const combineSignalWithTimeout = (
   }
 
   const controller = new AbortController();
-  const timeoutReason = new DOMException('Request timed out', 'TimeoutError');
+  const timeoutReason = createTimeoutError();
   const timeoutId = setTimeout(() => controller.abort(timeoutReason), options.timeoutMs);
-  const timedOut = () => controller.signal.reason instanceof DOMException && controller.signal.reason.name === 'TimeoutError';
+  const timedOut = () => isTimeoutError(controller.signal.reason);
 
   if (options.signal) {
     if (options.signal.aborted) {
