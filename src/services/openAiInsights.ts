@@ -9,6 +9,7 @@ import {
 } from './openai/client';
 import { OPENAI_MODELS, PROMPTS, SCHEMAS, buildPromptContext } from './openai/definitions';
 export { buildPromptContext } from './openai/definitions';
+import { getJurisdictionMetadata } from '../config/jurisdictions';
 
 export interface EvidenceFile {
   name: string;
@@ -17,80 +18,8 @@ export interface EvidenceFile {
   description?: string;
 }
 
-const normalizeJurisdiction = (value: string): string => value.trim().toLowerCase();
-
-const COUNTRY_FROM_JURISDICTION: Record<string, { country: string; region?: string }> = {
-  // Canada
-  'alberta': { country: 'CA', region: 'Alberta' },
-  'british columbia': { country: 'CA', region: 'British Columbia' },
-  'manitoba': { country: 'CA', region: 'Manitoba' },
-  'new brunswick': { country: 'CA', region: 'New Brunswick' },
-  'newfoundland and labrador': { country: 'CA', region: 'Newfoundland and Labrador' },
-  'northwest territories': { country: 'CA', region: 'Northwest Territories' },
-  'nova scotia': { country: 'CA', region: 'Nova Scotia' },
-  'nunavut': { country: 'CA', region: 'Nunavut' },
-  'ontario': { country: 'CA', region: 'Ontario' },
-  'prince edward island': { country: 'CA', region: 'Prince Edward Island' },
-  'quebec': { country: 'CA', region: 'Quebec' },
-  'saskatchewan': { country: 'CA', region: 'Saskatchewan' },
-  'yukon': { country: 'CA', region: 'Yukon' },
-  // USA
-  'alabama': { country: 'US', region: 'Alabama' },
-  'alaska': { country: 'US', region: 'Alaska' },
-  'arizona': { country: 'US', region: 'Arizona' },
-  'arkansas': { country: 'US', region: 'Arkansas' },
-  'california': { country: 'US', region: 'California' },
-  'colorado': { country: 'US', region: 'Colorado' },
-  'connecticut': { country: 'US', region: 'Connecticut' },
-  'delaware': { country: 'US', region: 'Delaware' },
-  'district of columbia': { country: 'US', region: 'District of Columbia' },
-  'florida': { country: 'US', region: 'Florida' },
-  'georgia': { country: 'US', region: 'Georgia' },
-  'hawaii': { country: 'US', region: 'Hawaii' },
-  'idaho': { country: 'US', region: 'Idaho' },
-  'illinois': { country: 'US', region: 'Illinois' },
-  'indiana': { country: 'US', region: 'Indiana' },
-  'iowa': { country: 'US', region: 'Iowa' },
-  'kansas': { country: 'US', region: 'Kansas' },
-  'kentucky': { country: 'US', region: 'Kentucky' },
-  'louisiana': { country: 'US', region: 'Louisiana' },
-  'maine': { country: 'US', region: 'Maine' },
-  'maryland': { country: 'US', region: 'Maryland' },
-  'massachusetts': { country: 'US', region: 'Massachusetts' },
-  'michigan': { country: 'US', region: 'Michigan' },
-  'minnesota': { country: 'US', region: 'Minnesota' },
-  'mississippi': { country: 'US', region: 'Mississippi' },
-  'missouri': { country: 'US', region: 'Missouri' },
-  'montana': { country: 'US', region: 'Montana' },
-  'nebraska': { country: 'US', region: 'Nebraska' },
-  'nevada': { country: 'US', region: 'Nevada' },
-  'new hampshire': { country: 'US', region: 'New Hampshire' },
-  'new jersey': { country: 'US', region: 'New Jersey' },
-  'new mexico': { country: 'US', region: 'New Mexico' },
-  'new york': { country: 'US', region: 'New York' },
-  'north carolina': { country: 'US', region: 'North Carolina' },
-  'north dakota': { country: 'US', region: 'North Dakota' },
-  'ohio': { country: 'US', region: 'Ohio' },
-  'oklahoma': { country: 'US', region: 'Oklahoma' },
-  'oregon': { country: 'US', region: 'Oregon' },
-  'pennsylvania': { country: 'US', region: 'Pennsylvania' },
-  'rhode island': { country: 'US', region: 'Rhode Island' },
-  'south carolina': { country: 'US', region: 'South Carolina' },
-  'south dakota': { country: 'US', region: 'South Dakota' },
-  'tennessee': { country: 'US', region: 'Tennessee' },
-  'texas': { country: 'US', region: 'Texas' },
-  'utah': { country: 'US', region: 'Utah' },
-  'vermont': { country: 'US', region: 'Vermont' },
-  'virginia': { country: 'US', region: 'Virginia' },
-  'washington': { country: 'US', region: 'Washington' },
-  'west virginia': { country: 'US', region: 'West Virginia' },
-  'wisconsin': { country: 'US', region: 'Wisconsin' },
-  'wyoming': { country: 'US', region: 'Wyoming' },
-};
-
 const buildSearchFilters = (jurisdiction: string): { allowed_domains?: string[]; user_location?: Record<string, string> } => {
-  const normalized = normalizeJurisdiction(jurisdiction);
-  const location = COUNTRY_FROM_JURISDICTION[normalized];
+  const location = getJurisdictionMetadata(jurisdiction);
 
   let allowed_domains: string[] | undefined;
   if (location?.country === 'CA') {
