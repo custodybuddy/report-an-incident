@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import Button from '../ui/Button';
-import H1 from '../ui/H1';
+import StepHero from '../ui/StepHero';
 import {
   cardBase,
   cardPadding,
@@ -99,9 +99,9 @@ const InvolvementSection: React.FC<InvolvementSectionProps> = ({
               key={item}
               label={item}
               isChecked
-            onChange={checked => handleCheckboxChange(item, checked)}
-          />
-        ))}
+              onChange={checked => handleCheckboxChange(item, checked)}
+            />
+          ))}
       </div>
       <div className={`flex ${inlineFieldGap} pt-4 border-t border-slate-700`}>
         <input
