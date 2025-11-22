@@ -127,8 +127,11 @@ const extractCitations = (responseJson: any): UrlCitation[] => {
   const seen = new Set<string>();
   return annotations
     .map((annotation: any) => {
-      const startIndex = annotation.start_index as number | undefined;
-      const endIndex = annotation.end_index as number | undefined;
+      // Normalize snake_case fields from the API into camelCase for downstream consumers.
+      const startIndex =
+        (annotation.startIndex as number | undefined) ?? (annotation.start_index as number | undefined);
+      const endIndex = (annotation.endIndex as number | undefined) ?? (annotation.end_index as number | undefined);
+
       const key = `${annotation.url}-${startIndex ?? 'x'}-${endIndex ?? 'y'}`;
       if (seen.has(key)) {
         return null;
