@@ -1,5 +1,5 @@
 import React from 'react';
-import H1 from '../ui/H1';
+import StepHero from '../ui/StepHero';
 import {
   cardBase,
   cardPadding,
