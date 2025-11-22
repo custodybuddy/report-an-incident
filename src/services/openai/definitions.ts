@@ -1,5 +1,6 @@
 import type { IncidentData } from '../../types';
 import type { JsonSchemaDefinition } from './client';
+import { formatDate, formatTime } from '../../utils/dateTime';
 
 export const OPENAI_MODELS = {
   chat: 'gpt-4o-mini',
@@ -117,8 +118,8 @@ export const buildPromptContext = (incidentData: IncidentData): string => {
 
   return `
 INCIDENT DETAILS:
-- Date: ${incidentData.date || 'N/A'}
-- Time: ${incidentData.time || 'N/A'}
+- Date: ${formatDate(incidentData.date)}
+- Time: ${formatTime(incidentData.time)}
 - Jurisdiction: ${incidentData.jurisdiction || 'N/A'}
 - Case Number: ${incidentData.caseNumber || 'N/A'}
 - Parties Involved: ${parties}
@@ -154,7 +155,7 @@ Analyze the potential impact on the children based only on the provided narrativ
 
 ${objectiveNarrative}
 
-Date of Incident: ${date || 'N/A'} at ${time || 'N/A'}.
+Date of Incident: ${formatDate(date)} at ${formatTime(time)}.
 
 The message must strictly adhere to the facts, confirm adherence to court orders (if referenced), avoid emotional language, and exclude salutations or subject lines. Respond with only the message text.`,
   evidenceImage: (fileName: string, fileType: string, description: string, incidentNarrative: string) => `As a neutral, objective legal assistant, analyze the attached image evidence in the context of the incident narrative below. Provide a concise, one-sentence summary of the image's potential relevance. Avoid speculation.

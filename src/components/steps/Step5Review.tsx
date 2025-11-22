@@ -8,6 +8,7 @@ import {
   getJurisdictionResources,
   normalizeSources,
 } from '../../utils/legalResources';
+import { formatDate } from '../../utils/dateTime';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -74,7 +75,7 @@ const normalizeProfessionalSummary = (
   const remainder = sentences.slice(1).join(' ').trim();
   const tailParts = [occurredTail, remainder].filter(Boolean);
 
-  const baseIntro = `On ${date || 'the reported date'}, a ${(severity || 'reported').toLowerCase()}-severity ${category || 'incident'} occurred`;
+  const baseIntro = `On ${formatDate(date, 'the reported date')}, a ${(severity || 'reported').toLowerCase()}-severity ${category || 'incident'} occurred`;
   const tail = tailParts.length ? ` ${tailParts.join(' ')}` : '';
   const normalized = `${baseIntro}${tail}`;
 
