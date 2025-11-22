@@ -9,8 +9,8 @@ export interface EvidenceItem {
 export interface Citation {
   url: string;
   title?: string;
-  start_index?: number;
-  end_index?: number;
+  startIndex?: number;
+  endIndex?: number;
 }
 
 export interface IncidentData {

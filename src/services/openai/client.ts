@@ -13,8 +13,8 @@ export interface OpenAIMessage {
 export interface UrlCitation {
   url: string;
   title?: string;
-  start_index?: number;
-  end_index?: number;
+  startIndex?: number;
+  endIndex?: number;
 }
 
 export interface ResponseJsonResult<T> {
@@ -127,7 +127,9 @@ const extractCitations = (responseJson: any): UrlCitation[] => {
   const seen = new Set<string>();
   return annotations
     .map((annotation: any) => {
-      const key = `${annotation.url}-${annotation.start_index ?? 'x'}-${annotation.end_index ?? 'y'}`;
+      const startIndex = annotation.start_index as number | undefined;
+      const endIndex = annotation.end_index as number | undefined;
+      const key = `${annotation.url}-${startIndex ?? 'x'}-${endIndex ?? 'y'}`;
       if (seen.has(key)) {
         return null;
       }
@@ -135,8 +137,8 @@ const extractCitations = (responseJson: any): UrlCitation[] => {
       return {
         url: annotation.url as string,
         title: annotation.title as string | undefined,
-        start_index: annotation.start_index as number | undefined,
-        end_index: annotation.end_index as number | undefined,
+        startIndex,
+        endIndex,
       };
     })
     .filter((item): item is UrlCitation => Boolean(item));
