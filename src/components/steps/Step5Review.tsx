@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
+import { cardPadding } from '../ui/layoutTokens';
 import type { IncidentData, ReportResult } from '../../types';
 import {
   deriveStatuteSummaries,
@@ -162,7 +163,9 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   };
 
   return (
-    <div className="space-y-8 bg-slate-950 text-slate-100 p-3 sm:p-4 rounded-3xl animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
+    <div
+      className={`space-y-8 bg-slate-950 text-slate-100 ${cardPadding} rounded-3xl animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]`}
+    >
       <div className="text-center mb-2 space-y-2">
         <H2 className="text-3xl font-bold text-amber-200">Court-Ready Review</H2>
         <p className="text-slate-200 max-w-2xl mx-auto">
