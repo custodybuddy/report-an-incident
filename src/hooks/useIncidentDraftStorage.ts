@@ -66,11 +66,15 @@ const useIncidentDraftStorage = ({
   incidentData,
   currentStep,
   enabled = false,
-  storageType = 'session',
+  storageType = 'local',
 }: UseIncidentDraftStorageOptions) => {
   const [storedDraft, setStoredDraft] = useState<StoredIncidentDraft | null>(() =>
     readDraftFromStorage(storageType)
   );
+
+  useEffect(() => {
+    setStoredDraft(readDraftFromStorage(storageType));
+  }, [storageType]);
 
   const hasStoredDraft = useMemo(() => Boolean(storedDraft), [storedDraft]);
 
@@ -114,5 +118,5 @@ const useIncidentDraftStorage = ({
   } as const;
 };
 
-export type { StoredIncidentDraft };
+export type { StoredIncidentDraft, StorageType };
 export default useIncidentDraftStorage;
