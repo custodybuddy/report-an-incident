@@ -1,14 +1,11 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button';
 import H2 from '../ui/H2';
 import { cardPadding } from '../ui/layoutTokens';
 import type { IncidentData, ReportResult } from '../../types';
-import {
-  deriveStatuteSummaries,
-  getJurisdictionResources,
-  normalizeSources,
-} from '../../utils/legalResources';
-import { formatDate } from '../../utils/dateTime';
+import { normalizeProfessionalSummary } from '../../utils/professionalSummary';
+import { buildLegalResources } from '../../services/legalResources';
+import { exportReportToPdf } from '../../services/pdfExport';
 
 interface Step5ReviewProps {
   incidentData: IncidentData;
@@ -70,26 +67,6 @@ const Section: React.FC<SectionProps> = ({
   );
 };
 
-const normalizeProfessionalSummary = (
-  summary: string | undefined,
-  date: string,
-  severity: string,
-  category: string
-): string => {
-  const trimmed = (summary ?? '').trim();
-  const sentences = trimmed.split(/(?<=\.)\s+/).filter(Boolean);
-  const first = sentences[0] ?? '';
-  const occurredTail = first.match(/occurred\s*(.*)$/i)?.[1]?.trim() ?? '';
-  const remainder = sentences.slice(1).join(' ').trim();
-  const tailParts = [occurredTail, remainder].filter(Boolean);
-
-  const baseIntro = `On ${formatDate(date, 'the reported date')}, a ${(severity || 'reported').toLowerCase()}-severity ${category || 'incident'} occurred`;
-  const tail = tailParts.length ? ` ${tailParts.join(' ')}` : '';
-  const normalized = `${baseIntro}${tail}`;
-
-  return normalized.endsWith('.') ? normalized : `${normalized}.`;
-};
-
 const Step5Review: React.FC<Step5ReviewProps> = ({
   incidentData,
   reportResult,
@@ -97,26 +74,14 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   onPrev,
 }) => {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const { jurisdiction } = incidentData;
   const classificationDisplay = reportResult?.category ?? 'Pending AI classification';
   const severityDisplay = reportResult?.severity ?? 'Pending AI classification';
 
-  const normalizedSources = useMemo(
-    () => normalizeSources(reportResult?.sources ?? []),
-    [reportResult?.sources],
-  );
-
-  const statuteSummaries = useMemo(
-    () =>
-      reportResult
-        ? deriveStatuteSummaries(reportResult.legalInsights ?? '', normalizedSources, jurisdiction)
-        : [],
-    [jurisdiction, normalizedSources, reportResult],
-  );
-
-  const jurisdictionResources = useMemo(
-    () => getJurisdictionResources(jurisdiction),
-    [jurisdiction],
+  const { statuteSummaries, jurisdictionResources } = useMemo(
+    () => buildLegalResources(reportResult, jurisdiction),
+    [jurisdiction, reportResult],
   );
 
   const normalizedProfessionalSummary = useMemo(
@@ -133,42 +98,13 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
   );
 
   const handleExportPdf = () => {
-    if (typeof window === 'undefined' || !reportResult) {
-      return;
-    }
-    const content = reportRef.current?.innerHTML;
-    if (!content) {
-      return;
-    }
+    setExportError(null);
+    const content = reportRef.current?.innerHTML ?? '';
+    const result = exportReportToPdf(content, { title: reportResult?.title });
 
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=900,height=1200');
-    if (!printWindow) {
-      return;
+    if (!result.success) {
+      setExportError(result.error ?? 'We were unable to export your report.');
     }
-
-    const style = `
-      <style>
-        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 24px; color: #111827; background: #f8fafc; }
-        h1, h2, h3, h4 { color: #111827; margin: 0 0 12px; }
-        .section { border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 16px; background: #ffffff; }
-        .title { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
-        .label { text-transform: uppercase; letter-spacing: 0.14em; font-size: 10px; color: #475569; }
-        .text { font-size: 14px; color: #1f2937; line-height: 1.5; }
-        a { color: #b45309; text-decoration: underline; }
-        ul { margin: 8px 0; padding-left: 18px; }
-        @media print { body { margin: 12px; } }
-      </style>
-    `;
-
-    printWindow.document.write(
-      `<!doctype html><html><head><title>Incident Report</title>${style}</head><body>${content}</body></html>`
-    );
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    };
   };
 
   return (
@@ -181,6 +117,24 @@ const Step5Review: React.FC<Step5ReviewProps> = ({
           Confirm the facts, then generate a clean, court-focused document with structured findings.
         </p>
       </div>
+
+      {exportError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-red-100 shadow-lg shadow-red-900/30"
+        >
+          <div className="flex items-start gap-3">
+            <span aria-hidden className="mt-1 text-red-300">
+              &#9888;
+            </span>
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-[0.22em] text-red-200">Export issue</p>
+              <p className="text-sm leading-relaxed">{exportError}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         ref={reportRef}
