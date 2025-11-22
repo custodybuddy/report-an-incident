@@ -19,6 +19,8 @@ const requestViaProxy = async (
   signal?: AbortSignal
 ): Promise<ReportResult> => {
   const abortController = new AbortController();
+  // Mirror any upstream abort or timeout through the proxy request so the UI's
+  // cancel/timeout handling stays consistent whether the request is local or remote.
   const abortHandler = () =>
     abortController.abort(signal?.reason ?? new DOMException('Aborted', 'AbortError'));
 
@@ -104,6 +106,8 @@ export const generateIncidentReport = async (
 
   if (!hasServerApiKey()) {
     console.warn('Missing OpenAI API key; returning fallback incident report.');
+    // On the server, a missing API key means we cannot call OpenAI; return a
+    // fully shaped fallback report so the UI can continue to render normally.
     return {
       title: fallbackSummary.title,
       professionalSummary: fallbackSummary.professionalSummary,

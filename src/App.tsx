@@ -88,6 +88,8 @@ function App() {
 
   const maxAccessibleStep = useMemo(() => {
     let maxStep = 1;
+    // Walk the validation state in order to lock navigation to the first
+    // incomplete step, preventing users from skipping ahead in the wizard.
     for (const [step, isValid] of stepValidationEntries) {
       if (!isValid) {
         break;
@@ -223,6 +225,8 @@ function App() {
     }
 
     if (hasStoredDraft) {
+      // Show the restore banner once on load so the user can choose whether to
+      // resume their previous progress before new drafts start persisting.
       setShowRestorePrompt(true);
       return;
     }
