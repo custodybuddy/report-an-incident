@@ -13,6 +13,7 @@ interface Step4EvidenceProps {
   onCaseNumberChange: (value: string) => void;
   onEvidenceChange: (items: EvidenceItem[]) => void;
   onGenerateReport: () => void;
+  onCancelGeneration: () => void;
   isGenerating: boolean;
   hasReport: boolean;
   error?: string | null;
@@ -26,6 +27,7 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
   onCaseNumberChange,
   onEvidenceChange,
   onGenerateReport,
+  onCancelGeneration,
   isGenerating,
   hasReport,
   error,
@@ -210,6 +212,16 @@ const Step4Evidence: React.FC<Step4EvidenceProps> = ({
               <span className="h-2 w-2 rounded-full bg-amber-300 animate-pulse" />
               Generating report...
             </div>
+          )}
+          {(isGenerating || (!hasReport && error)) && (
+            <Button
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={onCancelGeneration}
+              disabled={!isGenerating && !error}
+            >
+              {isGenerating ? 'Cancel' : 'Try again'}
+            </Button>
           )}
           <Button
             className="w-full sm:w-auto"
