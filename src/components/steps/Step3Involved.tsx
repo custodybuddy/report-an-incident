@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import Button from '../ui/Button';
-import StepHero from '../ui/StepHero';
+import H1 from '../ui/H1';
+import {
+  cardBase,
+  cardPadding,
+  cardStack,
+  inlineFieldGap,
+  listStack,
+} from '../ui/layoutTokens';
 
 const PREDEFINED_PARTIES = [
   'Co-Parent',
@@ -55,8 +62,8 @@ const InvolvementSection: React.FC<InvolvementSectionProps> = ({
   };
 
   return (
-    <div className="bg-black/20 rounded-xl p-6 border border-slate-700 shadow-lg transition-all duration-300">
-      <h3 className="text-lg font-bold text-amber-400 mb-4 flex items-center">
+    <div className={`${cardBase} ${cardPadding} ${cardStack}`}>
+      <h3 className="text-lg font-bold text-amber-400 flex items-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="20"
@@ -76,7 +83,7 @@ const InvolvementSection: React.FC<InvolvementSectionProps> = ({
         </svg>
         {title}
       </h3>
-      <div className="space-y-2">
+      <div className={listStack}>
         {items.map(item => (
           <CustomCheckbox
             key={item}
@@ -92,11 +99,11 @@ const InvolvementSection: React.FC<InvolvementSectionProps> = ({
               key={item}
               label={item}
               isChecked
-              onChange={checked => handleCheckboxChange(item, checked)}
-            />
-          ))}
+            onChange={checked => handleCheckboxChange(item, checked)}
+          />
+        ))}
       </div>
-      <div className="mt-6 flex gap-2 pt-4 border-t border-slate-700">
+      <div className={`flex ${inlineFieldGap} pt-4 border-t border-slate-700`}>
         <input
           type="text"
           value={customItem}
