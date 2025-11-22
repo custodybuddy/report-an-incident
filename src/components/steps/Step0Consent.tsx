@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomCheckbox from '../ui/CustomCheckbox';
-import H1 from '../ui/H1';
+import StepHero from '../ui/StepHero';
 import { SITE_LINKS } from '../../config/links';
 
 interface Step0ConsentProps {
@@ -11,20 +11,13 @@ interface Step0ConsentProps {
 const Step0Consent: React.FC<Step0ConsentProps> = ({ acknowledged, onChange }) => {
 
   return (
-    <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
-      <div className="text-center mb-8">
-        <img
-          src="https://custodybuddy.com/incident-report/img/AgreeIcon.png"
-          alt="Document with lock and checkmark"
-          className="w-36 h-24 mx-auto mb-6 object-contain"
-          aria-hidden="true"
-        />
-        <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">Before We Begin</H1>
-        <p className="text-slate-400 max-w-md mx-auto">
-          Please review and acknowledge our terms before documenting your incident. This keeps the
-          experience transparent and consistent.
-        </p>
-      </div>
+    <div className="space-y-10 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
+      <StepHero
+        imageSrc="https://custodybuddy.com/incident-report/img/AgreeIcon.png"
+        imageAlt="Document with lock and checkmark"
+        title="Before We Begin"
+        description="Please review and acknowledge our terms before documenting your incident. This keeps the experience transparent and consistent."
+      />
       <div className="max-w-2xl mx-auto p-6 bg-black/20 rounded-xl border border-slate-700 shadow-lg transition-all duration-300">
         <h3 className="font-bold text-slate-100 mb-4 flex items-center">
           <svg

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CustomCheckbox from '../ui/CustomCheckbox';
 import Button from '../ui/Button';
-import H1 from '../ui/H1';
+import StepHero from '../ui/StepHero';
 
 const PREDEFINED_PARTIES = [
   'Co-Parent',
@@ -146,15 +146,11 @@ const Step3Involved: React.FC<Step3InvolvedProps> = ({
   onChildrenChange,
 }) => {
   return (
-    <div className="space-y-8 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
-      <div className="text-center mb-8">
-        <H1 className="text-3xl sm:text-4xl font-bold text-[#FFD700] mb-2">
-          Who was present or affected?
-        </H1>
-        <p className="text-slate-400 max-w-md mx-auto">
-          Keep track of the same options as the fully-featured product without any database wiring.
-        </p>
-      </div>
+    <div className="space-y-10 animate-[fade-in_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]">
+      <StepHero
+        title="Who was present or affected?"
+        description="Keep track of the same options as the fully-featured product without any database wiring."
+      />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <InvolvementSection
           title="Other Parties Involved"
