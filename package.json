@@ -8,19 +8,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node --loader ./ts-node-loader.mjs server/openai-proxy.ts",
-    "test": "vitest"
+    "test": "node scripts/run-tests.js"
   },
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.2.0",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
-    "jsdom": "^26.0.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0",
-    "vitest": "^3.0.4"
+    "vite": "^6.2.0"
   }
 }
