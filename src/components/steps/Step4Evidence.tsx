@@ -4,6 +4,10 @@ import { EVIDENCE_CATEGORIES } from '@/constants';
 import { JURISDICTIONS } from '@/constants';
 import H2 from '../ui/H2';
 import { useEvidenceManager } from '../../hooks/useEvidenceManager';
+import { useLegalSummary } from '@/hooks/useLegalSummary';
+import { getJurisdictionMetadata, behaviorToBadges, normalizeJurisdiction, getStatutesForJurisdiction } from '@/legal';
+import { type BehaviorType } from '@/types/legal';
+import Button from '../ui/Button';
 
 interface Step4Props {
   data: Pick<IncidentData, 'jurisdiction' | 'evidence' | 'narrative' | 'caseNumber'>;
@@ -22,6 +26,21 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
     evidence: data.evidence,
     updateData
   });
+  const {
+    legalSummary,
+    isLoading: isGeneratingLegal,
+    error: legalError,
+    run: runLegalSummary
+  } = useLegalSummary();
+
+  const jurisdictionMeta = data.jurisdiction ? getJurisdictionMetadata(data.jurisdiction) : undefined;
+  const panelStatutes =
+    jurisdictionMeta &&
+    getStatutesForJurisdiction({
+      id: jurisdictionMeta.id,
+      country: jurisdictionMeta.country,
+      region: jurisdictionMeta.region,
+    });
 
   const jurisdictionError = errors.jurisdiction;
 
@@ -90,6 +109,97 @@ const Step4Evidence: React.FC<Step4Props> = ({ data, updateData, errors }) => {
               className="w-full p-3 bg-slate-800/50 border-2 rounded-xl transition-all duration-300 shadow-sm text-slate-200 border-slate-600 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-400/30 hover:border-amber-500"
             />
           </div>
+        </div>
+
+        <div className="p-6 bg-black/20 rounded-xl border border-amber-500/30 shadow-lg space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-amber-300">AI Legal Mapping</h3>
+              <p className="text-sm text-slate-300">
+                Classify allegations, map to statutes, and generate court-ready language with hyperlinks.
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                void runLegalSummary(data.narrative, data.jurisdiction);
+              }}
+              disabled={isGeneratingLegal || !data.narrative.trim() || !data.jurisdiction}
+              className="whitespace-nowrap"
+            >
+              {isGeneratingLegal ? 'Generating…' : 'Generate Legal Summary'}
+            </Button>
+          </div>
+          {legalError && <p className="text-xs text-red-400">{legalError}</p>}
+          {(!data.narrative || !data.jurisdiction) && (
+            <p className="text-xs text-slate-400">
+              Add your narrative and select a jurisdiction to enable legal mapping.
+            </p>
+          )}
+          {legalSummary && (
+            <div className="space-y-4">
+              {legalSummary.allegations.map((item, idx) => (
+                <div
+                  key={`${item.raw}-${idx}`}
+                  className="p-4 rounded-lg border border-slate-700 bg-slate-900/50 space-y-2"
+                >
+                  <p className="text-sm text-slate-200">
+                    <span className="font-semibold text-amber-300">Allegation:</span> {item.raw}
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="px-2 py-1 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/40">
+                      {item.type}
+                    </span>
+                    {behaviorToBadges[item.type as BehaviorType]?.map((badge) => (
+                      <span
+                        key={badge}
+                        className="px-2 py-1 rounded-full bg-slate-800 text-amber-200 border border-amber-400/30"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-slate-200 leading-relaxed">{item.summary}</p>
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    {item.statutes.map((statute) => (
+                      <a
+                        key={statute.link}
+                        href={statute.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-amber-300 underline underline-offset-2 hover:text-amber-200"
+                      >
+                        {statute.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {jurisdictionMeta && (
+                <div className="p-4 rounded-lg border border-amber-400/40 bg-amber-500/10 space-y-2">
+                  <p className="text-sm font-semibold text-amber-200">Jurisdiction context</p>
+                  <p className="text-sm text-slate-100">
+                    {jurisdictionMeta.region} ({jurisdictionMeta.country}){jurisdictionMeta.hasUnifiedFamilyCourt ? ' · Unified Family Court available' : ''}{jurisdictionMeta.usesUCCJEA ? ' · UCCJEA applies' : ''}
+                  </p>
+                  {jurisdictionMeta.notes && <p className="text-xs text-slate-200">{jurisdictionMeta.notes}</p>}
+                  {panelStatutes && panelStatutes.length > 0 && (
+                    <div className="flex flex-wrap gap-3 text-xs mt-1">
+                      {panelStatutes.map((ref) => (
+                        <a
+                          key={ref.link}
+                          href={ref.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-amber-300 underline underline-offset-2 hover:text-amber-200"
+                        >
+                          {ref.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>

@@ -1,9 +1,24 @@
+export const PREDEFINED_PARTIES = [
+  'Other Parent',
+  'Grandparent',
+  'Law Enforcement',
+  'Teacher',
+  'Neighbor',
+  'Other'
+];
 
-export const PREDEFINED_PARTIES: string[] = ['Ex-spouse/Co-parent', 'Their current partner', 'Grandparent', 'Other family member', 'Police/First Responder', 'Witness'];
-export const PREDEFINED_CHILDREN: string[] = ['Child A', 'Child B', 'Child C'];
-export const JURISDICTIONS: string[] = ['Ontario, Canada', 'British Columbia, Canada', 'Alberta, Canada', 'Quebec, Canada', 'Other Canadian Province', 'US State - Please specify'];
+export const PREDEFINED_CHILDREN = ['First Child', 'Second Child', 'Other'];
 
-export const EVIDENCE_CATEGORIES = ['Screenshot', 'Document', 'Audio', 'Video', 'Other'] as const;
-export type EvidenceCategory = (typeof EVIDENCE_CATEGORIES)[number];
+export const EVIDENCE_CATEGORIES = [
+  'Screenshots',
+  'Text Messages',
+  'Emails',
+  'Audio',
+  'Video',
+  'Documents',
+  'Other'
+];
 
-export const AI_INSIGHT_LABEL = 'AI Insight:';
+import { JURISDICTIONS as JURISDICTION_METADATA } from '@/legal/jurisdictions';
+
+export const JURISDICTIONS = JURISDICTION_METADATA.map((j) => j.region);

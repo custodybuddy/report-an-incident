@@ -1,7 +1,7 @@
 # Overview
 This repository contains a Vite-powered React 19 single-page application that guides users through documenting an incident and generates AI-assisted reports.
 
-## Running instructions emphasize installing dependencies, supplying a Gemini API key, and starting the dev server locally.
+## Running instructions emphasize installing dependencies, supplying an OpenAI API key, and starting the dev server locally.
 
 ## Tooling & Configuration
 TypeScript compiler settings target modern browsers, enable React JSX transforms, and expose a @/* path alias for root-relative imports.
@@ -24,14 +24,12 @@ State Management
 src/hooks/useIncidentState.ts encapsulates wizard state, including persisted local storage hydration, validation per step, dirty-state tracking, and evidence cleanup when resetting the flow.
 
 Services & Data Access
-src/services/geminiClient.ts centralizes Gemini API bootstrap, src/services/geminiPrompts/ contains the typed prompt builders and response schemas used across AI workflows, and src/services/evidenceAnalysis.ts focuses on media-specific handling for automated evidence reviews.
-
-src/services/evidenceStore.ts abstracts IndexedDB (with an in-memory fallback) for storing evidence blobs, exposing helpers to save, fetch, and delete records individually or in batches.
+src/services/openaiClient.ts centralizes OpenAI API bootstrap and request helpers for generating summaries. src/services/evidenceStore.ts abstracts IndexedDB (with an in-memory fallback) for storing evidence blobs, exposing helpers to save, fetch, and delete records individually or in batches.
 
 Reporting Utilities
 src/services/reportExport.ts composes AI outputs and incident metadata into printable/exportable HTML, presenting styled report sections, evidence logs, and resource lists before launching a new window or print dialog.
 
-Together, these modules deliver a multi-step incident reporting workflow that persists user input, interacts with Gemini for analysis, and generates polished exports.
+Together, these modules deliver a multi-step incident reporting workflow that persists user input, interacts with OpenAI for analysis, and generates polished exports.
 
 
 
@@ -52,6 +50,6 @@ View your app in AI Studio: https://ai.studio/apps/drive/1NCiWxVYkEIYAa6UWeanNl_
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. (Optional) Set `VITE_OPENAI_API_KEY` in `.env.local` to enable the OpenAI-powered narrative summarizer.
 3. Run the app:
    `  `

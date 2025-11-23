@@ -10,9 +10,9 @@
     "test": "node --loader ./ts-node-loader.mjs --test src/hooks/useEvidenceManager.test.ts src/utils/formatMarkdown.test.ts src/components/steps/Step5Review/hooks/useReviewReport.test.ts"
   },
   "dependencies": {
+    "openai": "^6.9.1",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "@google/genai": "^1.25.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
 import { type IncidentData, type IncidentDataUpdater } from '@/types';
 import useSpeechToText from '@/hooks/useSpeechToText';
+import { useOpenAiSummary } from '@/hooks/useOpenAiSummary';
 import H1 from '../ui/H1';
+import Button from '../ui/Button';
 
 interface Step2Props {
   data: Pick<IncidentData, 'narrative'>;
@@ -11,7 +13,7 @@ interface Step2Props {
 
 const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
   const charCount = data.narrative.length;
-  const isMinLengthMet = charCount >= 100;
+  const isMinLengthMet = charCount >= 20;
   const narrativeError = errors.narrative;
 
   const handleDictationAppend = useCallback(
@@ -38,6 +40,13 @@ const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
     startListening,
     stopListening,
   } = useSpeechToText({ onFinalTranscript: handleDictationAppend });
+  const {
+    summary,
+    error: aiError,
+    isLoading,
+    isAvailable,
+    runSummary,
+  } = useOpenAiSummary();
 
   const handleMicToggle = () => {
     if (!isSupported) {
@@ -64,7 +73,7 @@ const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
         <p className="text-slate-400 max-w-md mx-auto">Describe the incident objectively. Our AI will filter out emotional language for the professional report.</p>
       </div>
       <div className="max-w-4xl mx-auto">
-        <label htmlFor="narrative-input" className="block text-sm font-semibold text-slate-300 mb-3">Incident Description (Min 100 characters) <span className="text-amber-400">*</span></label>
+        <label htmlFor="narrative-input" className="block text-sm font-semibold text-slate-300 mb-3">Incident Description (Min 20 characters) <span className="text-amber-400">*</span></label>
         <div className="relative">
           <textarea
             id="narrative-input"
@@ -80,7 +89,7 @@ const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
             aria-describedby={narrativeError ? "narrative-error" : undefined}
           />
           <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 ${isMinLengthMet ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-            {charCount} / 100 characters
+            {charCount} / 20 characters
           </div>
         </div>
         {narrativeError && <p id="narrative-error" className="text-red-400 text-xs mt-1">{narrativeError}</p>}
@@ -134,6 +143,36 @@ const Step2Narrative: React.FC<Step2Props> = ({ data, updateData, errors }) => {
           )}
 
           {speechError && <p className="text-xs text-red-400">{speechError}</p>}
+        </div>
+
+        <div className="mt-4 p-4 rounded-xl border border-slate-700 bg-slate-900/40 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-200">OpenAI quick summary</p>
+              <p className="text-xs text-slate-400">
+                {isAvailable
+                  ? 'Generate a concise, objective summary to reuse later.'
+                  : 'Add VITE_OPENAI_API_KEY to enable OpenAI-powered summaries.'}
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                void runSummary(data.narrative);
+              }}
+              disabled={!isAvailable || isLoading || !isMinLengthMet}
+              variant="secondary"
+              className="whitespace-nowrap"
+            >
+              {isLoading ? 'Summarizing…' : 'Summarize with OpenAI'}
+            </Button>
+          </div>
+          {aiError && <p className="text-xs text-red-400">{aiError}</p>}
+          {summary && (
+            <div className="bg-black/40 border border-slate-700 rounded-lg p-3 text-sm text-slate-200">
+              <p className="text-amber-300 font-semibold mb-1">Summary</p>
+              <p className="leading-relaxed">{summary}</p>
+            </div>
+          )}
         </div>
 
         <div className="mt-3 flex items-start text-sm text-slate-400 p-3 bg-black/30 rounded-lg border border-slate-700">

@@ -1,0 +1,20 @@
+export {
+  COERCIVE_CONTROL_GLOSSARY,
+  CANADA_FEDERAL,
+  CANADA_FEDERAL_STATUTES,
+  CANADA_PROVINCIAL_ACTS,
+  CANADA_PROVINCES,
+  US_COERCIVE_CONTROL_LAWS,
+  US_FEDERAL_REFERENCES,
+  US_FEDERAL,
+  US_STATE_FAMILY_CODES,
+  US_COERCIVE_CONTROL,
+  resolveJurisdiction,
+  mapAllegationToStatutes,
+  behaviorToBadges,
+  DEFAULT_JURISDICTION,
+  SITE_LINKS,
+  RESOURCE_LINKS,
+  getStatutesForJurisdiction,
+} from './data';
+export { JURISDICTIONS, getJurisdictionMetadata, normalizeJurisdiction } from './jurisdictions';
